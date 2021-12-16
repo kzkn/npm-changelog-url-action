@@ -30,9 +30,9 @@ type UpdatedPackage = {
 function diff(current: YarnLockFile, previous?: YarnLockFile): UpdatedPackage[] {
   const updatedPackages: UpdatedPackage[] = []
   const currPkgs = current.installedPackages()
-  const prevPkgs = previous?.installedPackages() || new Map()
+  const prevPkgs = previous?.installedPackages()
   for (const [key, currPkg] of currPkgs.entries()) {
-    const prevPkg = prevPkgs.get(key)
+    const prevPkg = prevPkgs?.get(key)
     if (!prevPkg || currPkg.version !== prevPkg.version) {
       updatedPackages.push({
         name: key,
@@ -112,6 +112,7 @@ async function run(): Promise<void> {
     const report = generateReport(updates, changelogs)
     await postComment(report)
   } catch (error) {
+    console.error('unexpected error has occurred', error)
     if (error instanceof Error) core.setFailed(error.message)
   }
 }
