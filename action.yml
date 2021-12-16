@@ -1,11 +1,13 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: NPM Package ChangeLog URL
+description: Comment ChangeLog URLs of updated NPM Packages
+author: kzkn
 inputs:
-  milliseconds: # change this
+  githubToken:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+  npmToken:
+    required: true
+  yarnLockPath:
+    default: 'yarn.lock'
 runs:
   using: 'node12'
   main: 'dist/index.js'
