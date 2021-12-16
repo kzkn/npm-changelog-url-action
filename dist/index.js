@@ -128,6 +128,7 @@ class Repository {
     }
     static fromUrl(url, token) {
         const [, owner, repo] = url.match(REPO_URL_REGEXP);
+        console.log(`github repository: %{url} ${owner} ${repo}`);
         return new Repository(owner, repo, token);
     }
     getChangelogUrl() {
@@ -158,7 +159,7 @@ class Repository {
         return __awaiter(this, void 0, void 0, function* () {
             const res = yield this.octokit.rest.repos.get({
                 owner: this.owner,
-                repo: this.name
+                repo: this.name,
             });
             return res.data.default_branch;
         });
@@ -173,6 +174,7 @@ class Tree {
     }
     static fromUrl(url, token) {
         const [, owner, repo, path] = url.match(TREE_URL_REGEXP);
+        console.log(`github tree: %{url} ${owner} ${repo} ${path}`);
         return new Tree(owner, repo, path, token);
     }
     getChangelogUrl() {
@@ -378,7 +380,7 @@ function resolvePackage(name, npmToken) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const npmInfo = yield npm_registry_fetch_1.default.json(name, { token: npmToken });
-            return new Package(npmInfo);
+            return new Package(name, npmInfo);
         }
         catch (e) {
             console.debug(`failed to fetch npm package info: ${name}`, e);
@@ -387,12 +389,14 @@ function resolvePackage(name, npmToken) {
 }
 exports.resolvePackage = resolvePackage;
 class Package {
-    constructor(info) {
+    constructor(name, info) {
+        this.name = name;
         this.info = info;
     }
     github(githubToken) {
         const { repository } = this.info;
         if (repository && repository.url) {
+            console.log(`npm package: ${this.name} ${repository}`);
             return (0, github_1.newGithub)(repository.url, githubToken);
         }
     }
