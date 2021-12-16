@@ -72,6 +72,7 @@ class Repository {
 
   static fromUrl(url: string, token: string): Repository {
     const [, owner, repo] = url.match(REPO_URL_REGEXP) as string[]
+    console.log(`github repository: %{url} ${owner} ${repo}`)
     return new Repository(owner, repo, token)
   }
 
@@ -107,7 +108,7 @@ class Repository {
   async defaultBranch(): Promise<string> {
     const res = await this.octokit.rest.repos.get({
       owner: this.owner,
-      repo: this.name
+      repo: this.name,
     })
     return res.data.default_branch
   }
@@ -116,6 +117,7 @@ class Repository {
 class Tree {
   static fromUrl(url: string, token: string): Tree {
     const [, owner, repo, path] = url.match(TREE_URL_REGEXP) as string[]
+    console.log(`github tree: %{url} ${owner} ${repo} ${path}`)
     return new Tree(owner, repo, path, token)
   }
 
