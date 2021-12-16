@@ -1,4 +1,4 @@
-import lockfile from '@yarnpkg/lockfile'
+import * as lockfile from '@yarnpkg/lockfile'
 
 type InstalledPackage = {
   name: string
@@ -20,8 +20,9 @@ export class YarnLockFile {
   installedPackages(): Map<string, InstalledPackage> {
     const pkgs = new Map<string, InstalledPackage>()
     for (const key of Object.keys(this.content)) {
-      pkgs.set(key, {
-        name: this.nameOf(key),
+      const name = this.nameOf(key)
+      pkgs.set(name, {
+        name,
         version: this.content[key].version as string
       })
     }
