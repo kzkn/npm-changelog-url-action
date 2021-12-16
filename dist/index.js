@@ -272,9 +272,9 @@ function fetchYarnLockFiles(githubToken, path) {
 function diff(current, previous) {
     const updatedPackages = [];
     const currPkgs = current.installedPackages();
-    const prevPkgs = (previous === null || previous === void 0 ? void 0 : previous.installedPackages()) || new Map();
+    const prevPkgs = previous === null || previous === void 0 ? void 0 : previous.installedPackages();
     for (const [key, currPkg] of currPkgs.entries()) {
-        const prevPkg = prevPkgs.get(key);
+        const prevPkg = prevPkgs === null || prevPkgs === void 0 ? void 0 : prevPkgs.get(key);
         if (!prevPkg || currPkg.version !== prevPkg.version) {
             updatedPackages.push({
                 name: key,
@@ -342,6 +342,7 @@ function run() {
             yield postComment(report);
         }
         catch (error) {
+            console.error('unexpected error has occurred', error);
             if (error instanceof Error)
                 core.setFailed(error.message);
         }
