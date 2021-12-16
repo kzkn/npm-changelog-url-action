@@ -391,8 +391,8 @@ class Package {
     }
     github(githubToken) {
         const { repository } = this.info;
-        if (repository) {
-            return (0, github_1.newGithub)(repository, githubToken);
+        if (repository && repository.url) {
+            return (0, github_1.newGithub)(repository.url, githubToken);
         }
     }
 }
