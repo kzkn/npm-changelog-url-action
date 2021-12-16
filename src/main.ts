@@ -2,32 +2,22 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {YarnLockFile} from './yarnlock'
 import {resolvePackage} from './package'
+import {fetchCurrentAndPreviousContent} from './github'
 import {markdownTable} from 'markdown-table'
 import replaceComment from '@aki77/actions-replace-comment'
 
-type Octokit = ReturnType<typeof github.getOctokit>
-
 async function fetchYarnLockFiles(
-  octokit: Octokit,
+  githubToken: string,
   path: string
-): Promise<{current: YarnLockFile; previous: YarnLockFile}> {
+): Promise<{current: YarnLockFile; previous?: YarnLockFile}> {
   const {owner, repo} = github.context.repo
   const head = github.context.ref
-  const res = await octokit.rest.pulls.get({
-    owner,
-    repo,
-    pull_number: github.context.issue.number
-  })
-  const base = res.data.base.ref
-
-  const [curr, prev] = await Promise.all([
-    octokit.rest.repos.getContent({owner, repo, path, ref: head}),
-    octokit.rest.repos.getContent({owner, repo, path, ref: base})
-  ])
+  const pull = github.context.issue.number
+  const [curr, prev] = await fetchCurrentAndPreviousContent(owner, repo, path, head, pull, githubToken)
 
   return {
-    current: YarnLockFile.parse((curr.data as any).content as string),
-    previous: YarnLockFile.parse((prev.data as any).content as string)
+    current: YarnLockFile.parse(curr),
+    previous: prev ? YarnLockFile.parse(prev) : undefined
   }
 }
 
@@ -37,10 +27,10 @@ type UpdatedPackage = {
   previousVersion?: string
 }
 
-function diff(current: YarnLockFile, previous: YarnLockFile): UpdatedPackage[] {
+function diff(current: YarnLockFile, previous?: YarnLockFile): UpdatedPackage[] {
   const updatedPackages: UpdatedPackage[] = []
   const currPkgs = current.installedPackages()
-  const prevPkgs = previous.installedPackages()
+  const prevPkgs = previous?.installedPackages() || new Map()
   for (const [key, currPkg] of currPkgs.entries()) {
     const prevPkg = prevPkgs.get(key)
     if (!prevPkg || currPkg.version !== prevPkg.version) {
@@ -112,9 +102,8 @@ async function run(): Promise<void> {
   try {
     const githubToken: string = core.getInput('githubToken')
     const path: string = core.getInput('yarnLockPath')
-    const octokit = github.getOctokit(githubToken)
 
-    const {current, previous} = await fetchYarnLockFiles(octokit, path)
+    const {current, previous} = await fetchYarnLockFiles(githubToken, path)
     const updates = diff(current, previous)
 
     const npmToken: string = core.getInput('npmToken')
