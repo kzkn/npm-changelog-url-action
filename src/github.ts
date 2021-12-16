@@ -65,6 +65,14 @@ function findChangelogEntry(entries: FileEntry[]): FileEntry | undefined {
   }
 }
 
+function normalizeRepoName(repo: string): string {
+  if (repo.endsWith('.git')) {
+    return repo.slice(0, -4)
+  } else {
+    return repo
+  }
+}
+
 class Repository {
   private owner: string
   private name: string
@@ -72,13 +80,13 @@ class Repository {
 
   static fromUrl(url: string, token: string): Repository {
     const [, owner, repo] = url.match(REPO_URL_REGEXP) as string[]
-    console.log(`github repository: %{url} ${owner} ${repo}`)
+    console.log(`github repository: ${url} ${owner} ${repo}`)
     return new Repository(owner, repo, token)
   }
 
   constructor(owner: string, name: string, token: string) {
     this.owner = owner
-    this.name = name
+    this.name = normalizeRepoName(name)
     this.token = token
   }
 
@@ -117,7 +125,7 @@ class Repository {
 class Tree {
   static fromUrl(url: string, token: string): Tree {
     const [, owner, repo, path] = url.match(TREE_URL_REGEXP) as string[]
-    console.log(`github tree: %{url} ${owner} ${repo} ${path}`)
+    console.log(`github tree: ${url} ${owner} ${repo} ${path}`)
     return new Tree(owner, repo, path, token)
   }
 
@@ -128,7 +136,7 @@ class Tree {
 
   constructor(owner: string, repo: string, path: string, token: string) {
     this.owner = owner
-    this.repo = repo
+    this.repo = normalizeRepoName(repo)
     this.path = path
     this.token = token
   }
