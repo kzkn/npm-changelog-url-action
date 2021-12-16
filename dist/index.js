@@ -73,9 +73,33 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.newGithub = void 0;
+exports.newGithub = exports.fetchCurrentAndPreviousContent = void 0;
 const github_1 = __nccwpck_require__(5438);
 const changelog_1 = __nccwpck_require__(1082);
+function fetchCurrentAndPreviousContent(owner, repo, path, head, pullNumber, token) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const octokit = (0, github_1.getOctokit)(token);
+        const res = yield octokit.rest.pulls.get({
+            owner,
+            repo,
+            pull_number: pullNumber
+        });
+        const base = res.data.base.ref;
+        function contentOf(ref) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const res = yield octokit.rest.repos.getContent({ owner, repo, path, ref });
+                const content = res.data.content;
+                if (content) {
+                    const buf = Buffer.from(content, 'base64');
+                    return buf.toString('utf-8');
+                }
+            });
+        }
+        const [curr, prev] = yield Promise.all([contentOf(head), contentOf(base)]);
+        return [curr, prev];
+    });
+}
+exports.fetchCurrentAndPreviousContent = fetchCurrentAndPreviousContent;
 const REPO_URL_REGEXP = new RegExp('^https://github.com/([^/]+)/([^/]+)/?$');
 const TREE_URL_REGEXP = new RegExp('^https://github.com/([^/]+)/([^/]+)/tree/[^/]+/(.+)$');
 function newGithub(url, token) {
@@ -230,32 +254,25 @@ const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const yarnlock_1 = __nccwpck_require__(7139);
 const package_1 = __nccwpck_require__(2536);
+const github_1 = __nccwpck_require__(5928);
 const markdown_table_1 = __nccwpck_require__(2798);
 const actions_replace_comment_1 = __importDefault(__nccwpck_require__(94));
-function fetchYarnLockFiles(octokit, path) {
+function fetchYarnLockFiles(githubToken, path) {
     return __awaiter(this, void 0, void 0, function* () {
         const { owner, repo } = github.context.repo;
         const head = github.context.ref;
-        const res = yield octokit.rest.pulls.get({
-            owner,
-            repo,
-            pull_number: github.context.issue.number
-        });
-        const base = res.data.base.ref;
-        const [curr, prev] = yield Promise.all([
-            octokit.rest.repos.getContent({ owner, repo, path, ref: head }),
-            octokit.rest.repos.getContent({ owner, repo, path, ref: base })
-        ]);
+        const pull = github.context.issue.number;
+        const [curr, prev] = yield (0, github_1.fetchCurrentAndPreviousContent)(owner, repo, path, head, pull, githubToken);
         return {
-            current: yarnlock_1.YarnLockFile.parse(curr.data.content),
-            previous: yarnlock_1.YarnLockFile.parse(prev.data.content)
+            current: yarnlock_1.YarnLockFile.parse(curr),
+            previous: prev ? yarnlock_1.YarnLockFile.parse(prev) : undefined
         };
     });
 }
 function diff(current, previous) {
     const updatedPackages = [];
     const currPkgs = current.installedPackages();
-    const prevPkgs = previous.installedPackages();
+    const prevPkgs = (previous === null || previous === void 0 ? void 0 : previous.installedPackages()) || new Map();
     for (const [key, currPkg] of currPkgs.entries()) {
         const prevPkg = prevPkgs.get(key);
         if (!prevPkg || currPkg.version !== prevPkg.version) {
@@ -317,8 +334,7 @@ function run() {
         try {
             const githubToken = core.getInput('githubToken');
             const path = core.getInput('yarnLockPath');
-            const octokit = github.getOctokit(githubToken);
-            const { current, previous } = yield fetchYarnLockFiles(octokit, path);
+            const { current, previous } = yield fetchYarnLockFiles(githubToken, path);
             const updates = diff(current, previous);
             const npmToken = core.getInput('npmToken');
             const changelogs = yield fetchChangelogUrls(updates, npmToken, githubToken);
