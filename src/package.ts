@@ -22,8 +22,8 @@ class Package {
 
   github(githubToken: string): ReturnType<typeof newGithub> {
     const {repository} = this.info
-    if (repository) {
-      return newGithub(repository as string, githubToken)
+    if (repository && repository.url) {
+      return newGithub(repository.url as string, githubToken)
     }
   }
 }
