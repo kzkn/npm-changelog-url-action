@@ -120,15 +120,23 @@ function findChangelogEntry(entries) {
             return entry;
     }
 }
+function normalizeRepoName(repo) {
+    if (repo.endsWith('.git')) {
+        return repo.slice(0, -4);
+    }
+    else {
+        return repo;
+    }
+}
 class Repository {
     constructor(owner, name, token) {
         this.owner = owner;
-        this.name = name;
+        this.name = normalizeRepoName(name);
         this.token = token;
     }
     static fromUrl(url, token) {
         const [, owner, repo] = url.match(REPO_URL_REGEXP);
-        console.log(`github repository: %{url} ${owner} ${repo}`);
+        console.log(`github repository: ${url} ${owner} ${repo}`);
         return new Repository(owner, repo, token);
     }
     getChangelogUrl() {
@@ -168,13 +176,13 @@ class Repository {
 class Tree {
     constructor(owner, repo, path, token) {
         this.owner = owner;
-        this.repo = repo;
+        this.repo = normalizeRepoName(repo);
         this.path = path;
         this.token = token;
     }
     static fromUrl(url, token) {
         const [, owner, repo, path] = url.match(TREE_URL_REGEXP);
-        console.log(`github tree: %{url} ${owner} ${repo} ${path}`);
+        console.log(`github tree: ${url} ${owner} ${repo} ${path}`);
         return new Tree(owner, repo, path, token);
     }
     getChangelogUrl() {
@@ -396,7 +404,7 @@ class Package {
     github(githubToken) {
         const { repository } = this.info;
         if (repository && repository.url) {
-            console.log(`npm package: ${this.name} ${repository}`);
+            console.log(`npm package: ${this.name} ${repository.url}`);
             return (0, github_1.newGithub)(repository.url, githubToken);
         }
     }
