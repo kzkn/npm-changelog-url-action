@@ -25,10 +25,17 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.6.0"
+    "@actions/core": "^1.6.0",
+    "@actions/github": "^5.0.0",
+    "@aki77/actions-replace-comment": "^0.5.2",
+    "@yarnpkg/lockfile": "^1.1.0",
+    "markdown-table": "^3.0.2",
+    "npm-registry-fetch": "^12.0.0"
   },
   "devDependencies": {
     "@types/node": "^16.10.5",
+    "@types/npm-registry-fetch": "^8.0.2",
+    "@types/yarnpkg__lockfile": "^1.1.5",
     "@typescript-eslint/parser": "^5.0.0",
     "@vercel/ncc": "^0.31.1",
     "eslint": "^7.32.0",
