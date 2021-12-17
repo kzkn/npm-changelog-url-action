@@ -95,7 +95,7 @@ export class Repository {
   async getChangelogUrl(): Promise<string | undefined> {
     if (this.name === 'uuid') {
       const entries = await this.rootFileEntries()
-      core.debug(`${this.name} entries: ${entries}`)
+      core.debug(`${this.name} entries: ${JSON.stringify(entries)}`)
       return findChangelogEntry(entries)?.html_url
     } else {
       return Promise.resolve(undefined)
