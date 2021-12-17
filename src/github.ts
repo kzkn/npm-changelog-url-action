@@ -1,3 +1,4 @@
+import * as core from '@actions/core'
 import {getOctokit} from '@actions/github'
 import {SORTED_FILENAMES} from './changelog'
 
@@ -80,7 +81,7 @@ class Repository {
 
   static fromUrl(url: string, token: string): Repository {
     const [, owner, repo] = url.match(REPO_URL_REGEXP) as string[]
-    console.log(`github repository: ${url} ${owner} ${repo}`)
+    core.debug(`github repository: ${url} ${owner} ${repo}`)
     return new Repository(owner, repo, token)
   }
 
@@ -125,7 +126,7 @@ class Repository {
 class Tree {
   static fromUrl(url: string, token: string): Tree {
     const [, owner, repo, path] = url.match(TREE_URL_REGEXP) as string[]
-    console.log(`github tree: ${url} ${owner} ${repo} ${path}`)
+    core.debug(`github tree: ${url} ${owner} ${repo} ${path}`)
     return new Tree(owner, repo, path, token)
   }
 

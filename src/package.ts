@@ -1,3 +1,4 @@
+import * as core from '@actions/core'
 import npmRegistryFetch from 'npm-registry-fetch'
 import {newGithub} from './github'
 
@@ -9,7 +10,7 @@ export async function resolvePackage(
     const npmInfo = await npmRegistryFetch.json(name, {token: npmToken})
     return new Package(name, npmInfo)
   } catch (e) {
-    console.debug(`failed to fetch npm package info: ${name}`, e)
+    core.debug(`failed to fetch npm package info: ${name}, ${e}`)
   }
 }
 
@@ -25,8 +26,11 @@ class Package {
   github(githubToken: string): ReturnType<typeof newGithub> {
     const {repository} = this.info
     if (repository && repository.url) {
-      console.log(`npm package: ${this.name} ${repository.url}`)
+      core.debug(`npm package: name=${this.name} repo=${repository.url}`)
+      console.log()
       return newGithub(repository.url as string, githubToken)
+    } else {
+      core.debug(`npm package: no repository name=${this.name} repo=${repository} url=${repository?.url}`)
     }
   }
 }

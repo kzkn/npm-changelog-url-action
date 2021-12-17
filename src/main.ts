@@ -56,8 +56,9 @@ async function fetchChangelogUrls(
     pkgs
       .map(pkg => pkg?.github(githubToken))
       .map(async github => {
-        const changelog = await github?.getChangelogUrl()
-        return changelog || github?.releaseUrl
+        if (!github) { return Promise.resolve() }
+        const changelog = await github.getChangelogUrl()
+        return changelog || github.releaseUrl
       })
   )
   const ret = new Map<string, string>()
