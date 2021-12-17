@@ -120,8 +120,8 @@ function fetchCurrentAndPreviousContent(owner, repo, path, head, pullNumber, tok
     });
 }
 exports.fetchCurrentAndPreviousContent = fetchCurrentAndPreviousContent;
-const REPO_URL_REGEXP = new RegExp('^https://github.com/([^/]+)/([^/]+)/?$');
-const TREE_URL_REGEXP = new RegExp('^https://github.com/([^/]+)/([^/]+)/tree/[^/]+/(.+)$');
+const REPO_URL_REGEXP = new RegExp('https://github.com/([^/]+)/([^/]+)/?$');
+const TREE_URL_REGEXP = new RegExp('https://github.com/([^/]+)/([^/]+)/tree/[^/]+/(.+)$');
 function newGithub(url, token) {
     if (url.match(REPO_URL_REGEXP)) {
         return Repository.fromUrl(url, token);
