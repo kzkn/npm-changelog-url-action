@@ -31,10 +31,8 @@ export async function fetchCurrentAndPreviousContent(
   return [curr!!, prev]
 }
 
-const REPO_URL_REGEXP = new RegExp('^https://github.com/([^/]+)/([^/]+)/?$')
-const TREE_URL_REGEXP = new RegExp(
-  '^https://github.com/([^/]+)/([^/]+)/tree/[^/]+/(.+)$'
-)
+const REPO_URL_REGEXP = new RegExp('https://github.com/([^/]+)/([^/]+)/?$')
+const TREE_URL_REGEXP = new RegExp('https://github.com/([^/]+)/([^/]+)/tree/[^/]+/(.+)$')
 
 type Github = {
   getChangelogUrl(): Promise<string | undefined>
