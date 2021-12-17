@@ -42,7 +42,7 @@ type Github = {
 
 type FileEntry = {
   path: string
-  url: string
+  html_url: string
   type: 'blob' | 'tree'
 }
 
@@ -92,7 +92,7 @@ class Repository {
 
   async getChangelogUrl(): Promise<string | undefined> {
     const entries = await this.rootFileEntries()
-    return findChangelogEntry(entries)?.url
+    return findChangelogEntry(entries)?.html_url
   }
 
   get releaseUrl(): string {
@@ -143,7 +143,7 @@ class Tree {
 
   async getChangelogUrl(): Promise<string | undefined> {
     const entries = await this.entries()
-    return findChangelogEntry(entries)?.url
+    return findChangelogEntry(entries)?.html_url
   }
 
   get releaseUrl(): string {
