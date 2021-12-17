@@ -165,7 +165,7 @@ class Repository {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.name === 'uuid') {
                 const entries = yield this.rootFileEntries();
-                core.debug(`${this.name} entries: ${entries}`);
+                core.debug(`${this.name} entries: ${JSON.stringify(entries)}`);
                 return (_a = findChangelogEntry(entries)) === null || _a === void 0 ? void 0 : _a.html_url;
             }
             else {
