@@ -92,11 +92,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.newGithub = exports.fetchCurrentAndPreviousContent = void 0;
+exports.newGithub = exports.fetchContent = exports.baseRefOfPull = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
 const changelog_1 = __nccwpck_require__(1082);
-function fetchCurrentAndPreviousContent(owner, repo, path, head, pullNumber, token) {
+function baseRefOfPull(owner, repo, pullNumber, token) {
     return __awaiter(this, void 0, void 0, function* () {
         const octokit = (0, github_1.getOctokit)(token);
         const res = yield octokit.rest.pulls.get({
@@ -104,22 +104,22 @@ function fetchCurrentAndPreviousContent(owner, repo, path, head, pullNumber, tok
             repo,
             pull_number: pullNumber
         });
-        const base = res.data.base.ref;
-        function contentOf(ref) {
-            return __awaiter(this, void 0, void 0, function* () {
-                const res = yield octokit.rest.repos.getContent({ owner, repo, path, ref });
-                const content = res.data.content;
-                if (content) {
-                    const buf = Buffer.from(content, 'base64');
-                    return buf.toString('utf-8');
-                }
-            });
-        }
-        const [curr, prev] = yield Promise.all([contentOf(head), contentOf(base)]);
-        return [curr, prev];
+        return res.data.base.ref;
     });
 }
-exports.fetchCurrentAndPreviousContent = fetchCurrentAndPreviousContent;
+exports.baseRefOfPull = baseRefOfPull;
+function fetchContent(owner, repo, path, ref, token) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const octokit = (0, github_1.getOctokit)(token);
+        const res = yield octokit.rest.repos.getContent({ owner, repo, path, ref });
+        const content = res.data.content;
+        if (content) {
+            const buf = Buffer.from(content, 'base64');
+            return buf.toString('utf-8');
+        }
+    });
+}
+exports.fetchContent = fetchContent;
 const REPO_URL_REGEXP = new RegExp('https://github.com/([^/]+)/([^/]+)/?$');
 const TREE_URL_REGEXP = new RegExp('https://github.com/([^/]+)/([^/]+)/tree/[^/]+/(.+)$');
 function newGithub(url, token) {
@@ -291,8 +291,11 @@ function fetchYarnLockFiles(githubToken, path) {
     return __awaiter(this, void 0, void 0, function* () {
         const { owner, repo } = github.context.repo;
         const head = github.context.ref;
-        const pull = github.context.issue.number;
-        const [curr, prev] = yield (0, github_1.fetchCurrentAndPreviousContent)(owner, repo, path, head, pull, githubToken);
+        const base = yield (0, github_1.baseRefOfPull)(owner, repo, github.context.issue.number, githubToken);
+        const [curr, prev] = yield Promise.all([
+            (0, github_1.fetchContent)(owner, repo, path, head, githubToken),
+            (0, github_1.fetchContent)(owner, repo, path, base, githubToken)
+        ]);
         return {
             current: yarnlock_1.YarnLockFile.parse(curr),
             previous: prev ? yarnlock_1.YarnLockFile.parse(prev) : undefined
