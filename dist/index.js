@@ -92,7 +92,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.newGithub = exports.fetchContent = exports.baseRefOfPull = void 0;
+exports.Repository = exports.newGithub = exports.fetchContent = exports.baseRefOfPull = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
 const changelog_1 = __nccwpck_require__(1082);
@@ -148,6 +148,7 @@ function normalizeRepoName(repo) {
         return repo;
     }
 }
+// NOTE: export for test
 class Repository {
     constructor(owner, name, token) {
         this.owner = owner;
@@ -162,8 +163,14 @@ class Repository {
     getChangelogUrl() {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            const entries = yield this.rootFileEntries();
-            return (_a = findChangelogEntry(entries)) === null || _a === void 0 ? void 0 : _a.html_url;
+            if (this.name === 'uuid') {
+                const entries = yield this.rootFileEntries();
+                core.debug('${this.name} entries: ${entries}');
+                return (_a = findChangelogEntry(entries)) === null || _a === void 0 ? void 0 : _a.html_url;
+            }
+            else {
+                return Promise.resolve(undefined);
+            }
         });
     }
     get releaseUrl() {
@@ -175,6 +182,7 @@ class Repository {
     rootFileEntries() {
         return __awaiter(this, void 0, void 0, function* () {
             const branch = yield this.defaultBranch();
+            core.debug('${this.name} default branch: ${branch}');
             const res = yield this.octokit.rest.git.getTree({
                 owner: this.owner,
                 repo: this.name,
@@ -193,6 +201,7 @@ class Repository {
         });
     }
 }
+exports.Repository = Repository;
 class Tree {
     constructor(owner, repo, path, token) {
         this.owner = owner;
