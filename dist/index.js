@@ -120,7 +120,7 @@ function fetchContent(owner, repo, path, ref, token) {
     });
 }
 exports.fetchContent = fetchContent;
-const REPO_URL_REGEXP = new RegExp('https://github.com/([^/]+)/([^/]+)/?$');
+const REPO_URL_REGEXP = new RegExp('https://github.com/([^/]+)/([^#/]+)/?');
 const TREE_URL_REGEXP = new RegExp('https://github.com/([^/]+)/([^/]+)/tree/[^/]+/(.+)$');
 function newGithub(url, token) {
     if (url.match(REPO_URL_REGEXP)) {
