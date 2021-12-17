@@ -4,7 +4,16 @@ import {YarnLockFile} from './yarnlock'
 import {resolvePackage} from './package'
 import {baseRefOfPull, fetchContent} from './github'
 import {markdownTable} from 'markdown-table'
+import {Cache} from './cache'
 import replaceComment from '@aki77/actions-replace-comment'
+
+let _cache: Cache
+function cache(): Cache {
+  if (!_cache) {
+    _cache = new Cache(github.context.issue.number)
+  }
+  return _cache
+}
 
 async function fetchYarnLockFiles(
   githubToken: string,
@@ -14,8 +23,8 @@ async function fetchYarnLockFiles(
   const head = github.context.ref
   const base = await baseRefOfPull(owner, repo, github.context.issue.number, githubToken)
   const [curr, prev] = await Promise.all([
-    fetchContent(owner, repo, path, head, githubToken),
-    fetchContent(owner, repo, path, base, githubToken)
+    cache().getContentOrFetch(owner, repo, path, head, githubToken),
+    cache().getContentOrFetch(owner, repo, path, base, githubToken)
   ])
 
   return {
@@ -104,6 +113,8 @@ ${text}
 
 async function run(): Promise<void> {
   try {
+    await cache().restore()
+
     const githubToken: string = core.getInput('githubToken')
     const path: string = core.getInput('yarnLockPath')
 
@@ -112,6 +123,8 @@ async function run(): Promise<void> {
 
     const npmToken: string = core.getInput('npmToken')
     const changelogs = await fetchChangelogUrls(updates, npmToken, githubToken)
+
+    await cache().save()
 
     const report = generateReport(updates, changelogs)
     await postComment(report)
