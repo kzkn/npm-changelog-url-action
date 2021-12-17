@@ -33,7 +33,7 @@ export async function fetchContent(
   }
 }
 
-const REPO_URL_REGEXP = new RegExp('https://github.com/([^/]+)/([^/]+)/?$')
+const REPO_URL_REGEXP = new RegExp('https://github.com/([^/]+)/([^#/]+)/?')
 const TREE_URL_REGEXP = new RegExp('https://github.com/([^/]+)/([^/]+)/tree/[^/]+/(.+)$')
 
 type Github = {
