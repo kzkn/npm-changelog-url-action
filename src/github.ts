@@ -96,7 +96,21 @@ export class Repository {
     if (this.name === 'uuid') {
       const entries = await this.rootFileEntries()
       core.debug(`${this.name} entries: ${JSON.stringify(entries)}`)
-      return findChangelogEntry(entries)?.html_url
+
+      const entry = findChangelogEntry(entries)
+      if (!entry) { return }
+
+      try {
+        const res = await this.octokit.rest.repos.getContent({
+          owner: this.owner,
+          repo: this.name,
+          path: entry.path
+        })
+        return (res.data as any).html_url
+      } catch (e) {
+        core.debug(`failed to get content ${this.owner}/${this.name}/${entry.path}; ${e}`)
+        return
+      }
     } else {
       return Promise.resolve(undefined)
     }
