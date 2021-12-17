@@ -95,7 +95,7 @@ export class Repository {
   async getChangelogUrl(): Promise<string | undefined> {
     if (this.name === 'uuid') {
       const entries = await this.rootFileEntries()
-      core.debug('${this.name} entries: ${entries}')
+      core.debug(`${this.name} entries: ${entries}`)
       return findChangelogEntry(entries)?.html_url
     } else {
       return Promise.resolve(undefined)
@@ -112,7 +112,7 @@ export class Repository {
 
   async rootFileEntries(): Promise<FileEntry[]> {
     const branch = await this.defaultBranch()
-    core.debug('${this.name} default branch: ${branch}')
+    core.debug(`${this.name} default branch: ${branch}`)
     const res = await this.octokit.rest.git.getTree({
       owner: this.owner,
       repo: this.name,
