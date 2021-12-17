@@ -92,8 +92,13 @@ class Repository {
   }
 
   async getChangelogUrl(): Promise<string | undefined> {
-    const entries = await this.rootFileEntries()
-    return findChangelogEntry(entries)?.html_url
+    if (this.name === 'uuid') {
+      const entries = await this.rootFileEntries()
+      core.debug('${this.name} entries: ${entries}')
+      return findChangelogEntry(entries)?.html_url
+    } else {
+      return Promise.resolve(undefined)
+    }
   }
 
   get releaseUrl(): string {
@@ -106,6 +111,7 @@ class Repository {
 
   async rootFileEntries(): Promise<FileEntry[]> {
     const branch = await this.defaultBranch()
+    core.debug('${this.name} default branch: ${branch}')
     const res = await this.octokit.rest.git.getTree({
       owner: this.owner,
       repo: this.name,
