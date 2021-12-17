@@ -63,6 +63,25 @@ exports.SORTED_FILENAMES = Array.from(Object.entries(FILENAMES))
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -74,6 +93,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.newGithub = exports.fetchCurrentAndPreviousContent = void 0;
+const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
 const changelog_1 = __nccwpck_require__(1082);
 function fetchCurrentAndPreviousContent(owner, repo, path, head, pullNumber, token) {
@@ -136,14 +156,14 @@ class Repository {
     }
     static fromUrl(url, token) {
         const [, owner, repo] = url.match(REPO_URL_REGEXP);
-        console.log(`github repository: ${url} ${owner} ${repo}`);
+        core.debug(`github repository: ${url} ${owner} ${repo}`);
         return new Repository(owner, repo, token);
     }
     getChangelogUrl() {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const entries = yield this.rootFileEntries();
-            return (_a = findChangelogEntry(entries)) === null || _a === void 0 ? void 0 : _a.url;
+            return (_a = findChangelogEntry(entries)) === null || _a === void 0 ? void 0 : _a.html_url;
         });
     }
     get releaseUrl() {
@@ -182,14 +202,14 @@ class Tree {
     }
     static fromUrl(url, token) {
         const [, owner, repo, path] = url.match(TREE_URL_REGEXP);
-        console.log(`github tree: ${url} ${owner} ${repo} ${path}`);
+        core.debug(`github tree: ${url} ${owner} ${repo} ${path}`);
         return new Tree(owner, repo, path, token);
     }
     getChangelogUrl() {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const entries = yield this.entries();
-            return (_a = findChangelogEntry(entries)) === null || _a === void 0 ? void 0 : _a.url;
+            return (_a = findChangelogEntry(entries)) === null || _a === void 0 ? void 0 : _a.html_url;
         });
     }
     get releaseUrl() {
@@ -301,8 +321,11 @@ function fetchChangelogUrls(packages, npmToken, githubToken) {
         const urls = yield Promise.all(pkgs
             .map(pkg => pkg === null || pkg === void 0 ? void 0 : pkg.github(githubToken))
             .map((github) => __awaiter(this, void 0, void 0, function* () {
-            const changelog = yield (github === null || github === void 0 ? void 0 : github.getChangelogUrl());
-            return changelog || (github === null || github === void 0 ? void 0 : github.releaseUrl);
+            if (!github) {
+                return Promise.resolve();
+            }
+            const changelog = yield github.getChangelogUrl();
+            return changelog || github.releaseUrl;
         })));
         const ret = new Map();
         for (let i = 0; i < packages.length; ++i) {
@@ -368,6 +391,25 @@ run();
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -382,6 +424,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.resolvePackage = void 0;
+const core = __importStar(__nccwpck_require__(2186));
 const npm_registry_fetch_1 = __importDefault(__nccwpck_require__(5902));
 const github_1 = __nccwpck_require__(5928);
 function resolvePackage(name, npmToken) {
@@ -391,7 +434,7 @@ function resolvePackage(name, npmToken) {
             return new Package(name, npmInfo);
         }
         catch (e) {
-            console.debug(`failed to fetch npm package info: ${name}`, e);
+            core.debug(`failed to fetch npm package info: ${name}, ${e}`);
         }
     });
 }
@@ -404,8 +447,12 @@ class Package {
     github(githubToken) {
         const { repository } = this.info;
         if (repository && repository.url) {
-            console.log(`npm package: ${this.name} ${repository.url}`);
+            core.debug(`npm package: name=${this.name} repo=${repository.url}`);
+            console.log();
             return (0, github_1.newGithub)(repository.url, githubToken);
+        }
+        else {
+            core.debug(`npm package: no repository name=${this.name} repo=${repository} url=${repository === null || repository === void 0 ? void 0 : repository.url}`);
         }
     }
 }
