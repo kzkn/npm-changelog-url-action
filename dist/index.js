@@ -161,12 +161,26 @@ class Repository {
         return new Repository(owner, repo, token);
     }
     getChangelogUrl() {
-        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             if (this.name === 'uuid') {
                 const entries = yield this.rootFileEntries();
                 core.debug(`${this.name} entries: ${JSON.stringify(entries)}`);
-                return (_a = findChangelogEntry(entries)) === null || _a === void 0 ? void 0 : _a.html_url;
+                const entry = findChangelogEntry(entries);
+                if (!entry) {
+                    return;
+                }
+                try {
+                    const res = yield this.octokit.rest.repos.getContent({
+                        owner: this.owner,
+                        repo: this.name,
+                        path: entry.path
+                    });
+                    return res.data.html_url;
+                }
+                catch (e) {
+                    core.debug(`failed to get content ${this.owner}/${this.name}/${entry.path}; ${e}`);
+                    return;
+                }
             }
             else {
                 return Promise.resolve(undefined);
