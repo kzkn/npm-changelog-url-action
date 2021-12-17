@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {YarnLockFile} from './yarnlock'
 import {resolvePackage} from './package'
-import {baseRefOfPull} from './github'
+import {baseRefOfPull, fetchContent} from './github'
 import {markdownTable} from 'markdown-table'
 import {Cache} from './cache'
 import replaceComment from '@aki77/actions-replace-comment'
@@ -23,8 +23,8 @@ async function fetchYarnLockFiles(
   const head = github.context.ref
   const base = await baseRefOfPull(owner, repo, github.context.issue.number, githubToken)
   const [curr, prev] = await Promise.all([
-    cache().getContentOrFetch(owner, repo, path, head, githubToken),
-    cache().getContentOrFetch(owner, repo, path, base, githubToken)
+    fetchContent(owner, repo, path, head, githubToken),
+    fetchContent(owner, repo, path, base, githubToken)
   ])
 
   return {

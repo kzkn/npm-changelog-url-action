@@ -1,26 +1,13 @@
 import * as fs from 'fs'
 import * as core from '@actions/core'
 import * as cache from '@actions/cache'
-import * as github from './github'
 import type { Package } from './package'
 
 export class Cache {
-  private githubContentCache: GithubContentCache
   private changelogCache: ChangelogCache
 
   constructor(issueNumber: number) {
-    this.githubContentCache = new GithubContentCache(issueNumber)
     this.changelogCache = new ChangelogCache(issueNumber)
-  }
-
-  async getContentOrFetch(
-    owner: string,
-    repo: string,
-    path: string,
-    ref: string,
-    token: string
-  ): Promise<string | undefined> {
-    return await this.githubContentCache.getContentOrFetch(owner, repo, path, ref, token)
   }
 
   async getChangelogUrlOrFind(
@@ -32,64 +19,14 @@ export class Cache {
 
   async restore() {
     Promise.all([
-      this.githubContentCache.restore(),
       this.changelogCache.restore()
     ])
   }
 
   async save() {
     Promise.all([
-      this.githubContentCache.save(),
       this.changelogCache.save()
     ])
-  }
-}
-
-class GithubContentCache {
-  private body: Map<string, string> | undefined
-  private json: CachedJson
-
-  constructor(issueNumber: number) {
-    this.json = new CachedJson('github-content', issueNumber)
-  }
-
-  async getContentOrFetch(
-    owner: string,
-    repo: string,
-    path: string,
-    ref: string,
-    token: string
-  ): Promise<string | undefined> {
-    const key = `${owner};${repo};${path};${ref}`
-    if (this.body?.has(key)) {
-      return this.body.get(key)
-    } else {
-      const content = await github.fetchContent(owner, repo, path, ref, token)
-      if (content) {
-        this.body?.set(key, content)
-      }
-      return content
-    }
-  }
-
-  async restore() {
-    if (this.body) { return }
-
-    this.body = new Map()
-    const data = await this.json.load()
-    for (const [k, v] of Object.entries(data)) {
-      this.body.set(k, v)
-    }
-  }
-
-  async save() {
-    if (!this.body) { return }
-
-    const data: { [key: string]: string } = {}
-    for (const [k, v] of this.body.entries()) {
-      data[k] = v
-    }
-    await this.json.save(data)
   }
 }
 
