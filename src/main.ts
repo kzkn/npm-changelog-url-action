@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {YarnLockFile} from './yarnlock'
 import {resolvePackage} from './package'
-import {fetchCurrentAndPreviousContent} from './github'
+import {baseRefOfPull, fetchContent} from './github'
 import {markdownTable} from 'markdown-table'
 import replaceComment from '@aki77/actions-replace-comment'
 
@@ -12,11 +12,14 @@ async function fetchYarnLockFiles(
 ): Promise<{current: YarnLockFile; previous?: YarnLockFile}> {
   const {owner, repo} = github.context.repo
   const head = github.context.ref
-  const pull = github.context.issue.number
-  const [curr, prev] = await fetchCurrentAndPreviousContent(owner, repo, path, head, pull, githubToken)
+  const base = await baseRefOfPull(owner, repo, github.context.issue.number, githubToken)
+  const [curr, prev] = await Promise.all([
+    fetchContent(owner, repo, path, head, githubToken),
+    fetchContent(owner, repo, path, base, githubToken)
+  ])
 
   return {
-    current: YarnLockFile.parse(curr),
+    current: YarnLockFile.parse(curr!!),
     previous: prev ? YarnLockFile.parse(prev) : undefined
   }
 }

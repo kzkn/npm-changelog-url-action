@@ -2,33 +2,35 @@ import * as core from '@actions/core'
 import {getOctokit} from '@actions/github'
 import {SORTED_FILENAMES} from './changelog'
 
-export async function fetchCurrentAndPreviousContent(
+export async function baseRefOfPull(
   owner: string,
   repo: string,
-  path: string,
-  head: string,
   pullNumber: number,
   token: string
-): Promise<[string, string?]> {
+): Promise<string> {
   const octokit = getOctokit(token)
   const res = await octokit.rest.pulls.get({
     owner,
     repo,
     pull_number: pullNumber
   })
-  const base = res.data.base.ref
+  return res.data.base.ref
+}
 
-  async function contentOf(ref: string): Promise<string | undefined> {
-    const res = await octokit.rest.repos.getContent({owner, repo, path, ref})
-    const content = (res.data as any).content
-    if (content) {
-      const buf = Buffer.from(content as string, 'base64')
-      return buf.toString('utf-8')
-    }
+export async function fetchContent(
+  owner: string,
+  repo: string,
+  path: string,
+  ref: string,
+  token: string
+): Promise<string | undefined> {
+  const octokit = getOctokit(token)
+  const res = await octokit.rest.repos.getContent({ owner, repo, path, ref })
+  const content = (res.data as any).content
+  if (content) {
+    const buf = Buffer.from(content as string, 'base64')
+    return buf.toString('utf-8')
   }
-
-  const [curr, prev] = await Promise.all([contentOf(head), contentOf(base)])
-  return [curr!!, prev]
 }
 
 const REPO_URL_REGEXP = new RegExp('https://github.com/([^/]+)/([^/]+)/?$')
