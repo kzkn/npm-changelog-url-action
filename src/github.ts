@@ -74,7 +74,8 @@ function normalizeRepoName(repo: string): string {
   }
 }
 
-class Repository {
+// NOTE: export for test
+export class Repository {
   private owner: string
   private name: string
   private token: string
