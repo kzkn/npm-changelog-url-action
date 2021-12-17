@@ -14,7 +14,7 @@ export async function resolvePackage(
   }
 }
 
-class Package {
+export class Package {
   name: string
   private info: any
 
@@ -27,7 +27,6 @@ class Package {
     const {repository} = this.info
     if (repository && repository.url) {
       core.debug(`npm package: name=${this.name} repo=${repository.url}`)
-      console.log()
       return newGithub(repository.url as string, githubToken)
     } else {
       core.debug(`npm package: no repository name=${this.name} repo=${repository} url=${repository?.url}`)

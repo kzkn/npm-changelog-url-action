@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {YarnLockFile} from './yarnlock'
 import {resolvePackage} from './package'
-import {baseRefOfPull, fetchContent} from './github'
+import {baseRefOfPull} from './github'
 import {markdownTable} from 'markdown-table'
 import {Cache} from './cache'
 import replaceComment from '@aki77/actions-replace-comment'
@@ -65,13 +65,7 @@ async function fetchChangelogUrls(
     packages.map(pkg => resolvePackage(pkg.name, npmToken))
   )
   const urls = await Promise.all(
-    pkgs
-      .map(pkg => pkg?.github(githubToken))
-      .map(async github => {
-        if (!github) { return Promise.resolve() }
-        const changelog = await github.getChangelogUrl()
-        return changelog || github.releaseUrl
-      })
+    pkgs.map(pkg => pkg ? cache().getChangelogUrlOrFind(pkg, githubToken) : Promise.resolve(undefined))
   )
   const ret = new Map<string, string>()
   for (let i = 0; i < packages.length; ++i) {

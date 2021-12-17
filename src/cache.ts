@@ -2,12 +2,15 @@ import * as fs from 'fs'
 import * as core from '@actions/core'
 import * as cache from '@actions/cache'
 import * as github from './github'
+import type { Package } from './package'
 
 export class Cache {
   private githubContentCache: GithubContentCache
+  private changelogCache: ChangelogCache
 
   constructor(issueNumber: number) {
     this.githubContentCache = new GithubContentCache(issueNumber)
+    this.changelogCache = new ChangelogCache(issueNumber)
   }
 
   async getContentOrFetch(
@@ -20,15 +23,24 @@ export class Cache {
     return await this.githubContentCache.getContentOrFetch(owner, repo, path, ref, token)
   }
 
+  async getChangelogUrlOrFind(
+    pkg: Package,
+    githubToken: string
+  ): Promise<string | undefined> {
+    return await this.changelogCache.getUrlOrFind(pkg, githubToken)
+  }
+
   async restore() {
     Promise.all([
-      this.githubContentCache.restore()
+      this.githubContentCache.restore(),
+      this.changelogCache.restore()
     ])
   }
 
   async save() {
     Promise.all([
-      this.githubContentCache.save()
+      this.githubContentCache.save(),
+      this.changelogCache.save()
     ])
   }
 }
@@ -57,6 +69,53 @@ class GithubContentCache {
         this.body?.set(key, content)
       }
       return content
+    }
+  }
+
+  async restore() {
+    if (this.body) { return }
+
+    this.body = new Map()
+    const data = await this.json.load()
+    for (const [k, v] of Object.entries(data)) {
+      this.body.set(k, v)
+    }
+  }
+
+  async save() {
+    if (!this.body) { return }
+
+    const data: { [key: string]: string } = {}
+    for (const [k, v] of this.body.entries()) {
+      data[k] = v
+    }
+    await this.json.save(data)
+  }
+}
+
+class ChangelogCache {
+  // TODO: move body to CachedJson
+  private body: Map<string, string> | undefined
+  private json: CachedJson
+
+  constructor(issueNumber: number) {
+    this.json = new CachedJson('changelog', issueNumber)
+  }
+
+  async getUrlOrFind(pkg: Package, token: string): Promise<string | undefined> {
+    const { name } = pkg
+    if (this.body?.has(name)) {
+      return this.body.get(name)
+    } else {
+      const gh = pkg.github(token)
+      if (!gh) { return }
+
+      const changelog = await gh.getChangelogUrl()
+      const url = changelog || gh.releaseUrl
+      if (url) {
+        this.body?.set(name, url)
+      }
+      return url
     }
   }
 
