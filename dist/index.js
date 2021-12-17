@@ -165,7 +165,7 @@ class Repository {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.name === 'uuid') {
                 const entries = yield this.rootFileEntries();
-                core.debug('${this.name} entries: ${entries}');
+                core.debug(`${this.name} entries: ${entries}`);
                 return (_a = findChangelogEntry(entries)) === null || _a === void 0 ? void 0 : _a.html_url;
             }
             else {
@@ -182,7 +182,7 @@ class Repository {
     rootFileEntries() {
         return __awaiter(this, void 0, void 0, function* () {
             const branch = yield this.defaultBranch();
-            core.debug('${this.name} default branch: ${branch}');
+            core.debug(`${this.name} default branch: ${branch}`);
             const res = yield this.octokit.rest.git.getTree({
                 owner: this.owner,
                 repo: this.name,
