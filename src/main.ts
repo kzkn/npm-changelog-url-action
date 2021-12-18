@@ -31,9 +31,12 @@ async function fetchYarnLockFiles(
     fetchContent(owner, repo, path, head, githubToken),
     fetchContent(owner, repo, path, base, githubToken)
   ])
+  if (!curr) {
+    throw new Error(`${path} is not found in ${head}`)
+  }
 
   return {
-    current: YarnLockFile.parse(curr!!),
+    current: YarnLockFile.parse(curr),
     previous: prev ? YarnLockFile.parse(prev) : undefined
   }
 }
@@ -135,7 +138,7 @@ async function run(): Promise<void> {
     const report = generateReport(updates, changelogs)
     await postComment(report)
   } catch (error) {
-    console.error('unexpected error has occurred', error)
+    core.debug(`unexpected error has occurred ${error}`)
     if (error instanceof Error) core.setFailed(error.message)
   }
 }

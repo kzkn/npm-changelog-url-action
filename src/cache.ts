@@ -17,11 +17,11 @@ export class Cache {
     return await this.changelogCache.getUrlOrFind(pkg, githubToken)
   }
 
-  async restore() {
+  async restore(): Promise<void> {
     Promise.all([this.changelogCache.restore()])
   }
 
-  async save() {
+  async save(): Promise<void> {
     Promise.all([this.changelogCache.save()])
   }
 }
@@ -52,11 +52,11 @@ class ChangelogCache {
     }
   }
 
-  async restore() {
+  async restore(): Promise<void> {
     await this.body.load(raw => raw as string)
   }
 
-  async save() {
+  async save(): Promise<void> {
     await this.body.save(value => value)
   }
 }
@@ -72,18 +72,18 @@ class CacheBody<T> {
   }
 
   has(key: string): boolean {
-    return this.body!.has(key)
+    return this.body?.has(key) || false
   }
 
   get(key: string): T | undefined {
-    return this.body!.get(key)
+    return this.body?.get(key)
   }
 
-  set(key: string, value: T) {
-    this.body!.set(key, value)
+  set(key: string, value: T): void {
+    this.body?.set(key, value)
   }
 
-  async load(mapper: (raw: unknown) => T) {
+  async load(mapper: (raw: unknown) => T): Promise<void> {
     if (this.body) {
       return
     }
@@ -93,7 +93,7 @@ class CacheBody<T> {
       `${this.name}-`
     ])
     if (!hit) {
-      return {}
+      return
     }
 
     const content = fs.readFileSync(this.filename)
@@ -104,12 +104,12 @@ class CacheBody<T> {
     }
   }
 
-  async save(mapper: (v: T) => any) {
+  async save(mapper: (v: T) => unknown): Promise<void> {
     if (!this.body) {
       return
     }
 
-    const data: {[key: string]: any} = {}
+    const data: {[key: string]: unknown} = {}
     for (const [k, v] of this.body.entries()) {
       data[k] = mapper(v)
     }

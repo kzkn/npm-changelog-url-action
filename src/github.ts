@@ -60,7 +60,9 @@ export function newGithub(url: string, token: string): Github | undefined {
 
 function findChangelogEntry(entries: FileEntry[]): FileEntry | undefined {
   const entryMap = new Map()
-  entries.forEach(entry => entryMap.set(entry.path, entry))
+  for (const entry of entries) {
+    entryMap.set(entry.path, entry)
+  }
 
   for (const path of SORTED_FILENAMES) {
     const entry = entryMap.get(path)
