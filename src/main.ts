@@ -70,10 +70,10 @@ async function fetchChangelogUrls(
   githubToken: string
 ): Promise<Map<string, string>> {
   const pkgs = await Promise.all(
-    packages.map(pkg => resolvePackage(pkg.name, npmToken))
+    packages.map(async pkg => resolvePackage(pkg.name, npmToken))
   )
   const urls = await Promise.all(
-    pkgs.map(pkg =>
+    pkgs.map(async pkg =>
       pkg
         ? cache().getChangelogUrlOrFind(pkg, githubToken)
         : Promise.resolve(undefined)

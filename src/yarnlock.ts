@@ -33,7 +33,7 @@ export class YarnLockFile {
     const names = key.split('@')
     let name = names[0]
     if (name == '') {
-      name = '@' + names[1]
+      name = `@${names[1]}`
     }
     return name
   }
