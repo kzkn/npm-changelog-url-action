@@ -66,7 +66,7 @@ class Cache {
 exports.Cache = Cache;
 class ChangelogCache {
     constructor(issueNumber) {
-        this.json = new CachedJson('changelog', issueNumber);
+        this.body = new CacheBody('changelog', issueNumber);
     }
     getUrlOrFind(pkg, token) {
         var _a, _b;
@@ -91,48 +91,57 @@ class ChangelogCache {
     }
     restore() {
         return __awaiter(this, void 0, void 0, function* () {
+            yield this.body.load(raw => raw);
+        });
+    }
+    save() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.body.save(value => value);
+        });
+    }
+}
+class CacheBody {
+    constructor(name, issueNumber) {
+        this.name = name;
+        this.issueNumber = issueNumber;
+    }
+    has(key) {
+        return this.body.has(key);
+    }
+    get(key) {
+        return this.body.get(key);
+    }
+    set(key, value) {
+        this.body.set(key, value);
+    }
+    load(mapper) {
+        return __awaiter(this, void 0, void 0, function* () {
             if (this.body) {
                 return;
             }
             this.body = new Map();
-            const data = yield this.json.load();
+            const hit = yield cache.restoreCache([this.filename], this.cacheKey, [`${this.name}-`]);
+            if (!hit) {
+                return {};
+            }
+            const content = fs.readFileSync(this.filename);
+            const data = JSON.parse(content.toString());
             for (const [k, v] of Object.entries(data)) {
-                this.body.set(k, v);
+                const value = mapper(v);
+                this.body.set(k, value);
             }
         });
     }
-    save() {
+    save(mapper) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.body) {
                 return;
             }
             const data = {};
             for (const [k, v] of this.body.entries()) {
-                data[k] = v;
+                data[k] = mapper(v);
             }
-            yield this.json.save(data);
-        });
-    }
-}
-class CachedJson {
-    constructor(name, issueNumber) {
-        this.name = name;
-        this.issueNumber = issueNumber;
-    }
-    load() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const hit = yield cache.restoreCache([this.filename], this.cacheKey, [`${this.name}-`]);
-            if (!hit) {
-                return {};
-            }
-            const content = fs.readFileSync(this.filename);
-            return JSON.parse(content.toString());
-        });
-    }
-    save(data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const content = JSON.stringify(data);
-            fs.writeFileSync(this.filename, content);
+            fs.writeFileSync(this.filename, JSON.stringify(data));
             try {
                 yield cache.saveCache([this.filename], this.cacheKey);
             }
