@@ -50,16 +50,12 @@ class Cache {
     }
     restore() {
         return __awaiter(this, void 0, void 0, function* () {
-            Promise.all([
-                this.changelogCache.restore()
-            ]);
+            Promise.all([this.changelogCache.restore()]);
         });
     }
     save() {
         return __awaiter(this, void 0, void 0, function* () {
-            Promise.all([
-                this.changelogCache.save()
-            ]);
+            Promise.all([this.changelogCache.save()]);
         });
     }
 }
@@ -106,13 +102,16 @@ class CacheBody {
         this.issueNumber = issueNumber;
     }
     has(key) {
-        return this.body.has(key);
+        var _a;
+        return ((_a = this.body) === null || _a === void 0 ? void 0 : _a.has(key)) || false;
     }
     get(key) {
-        return this.body.get(key);
+        var _a;
+        return (_a = this.body) === null || _a === void 0 ? void 0 : _a.get(key);
     }
     set(key, value) {
-        this.body.set(key, value);
+        var _a;
+        (_a = this.body) === null || _a === void 0 ? void 0 : _a.set(key, value);
     }
     load(mapper) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -120,9 +119,11 @@ class CacheBody {
                 return;
             }
             this.body = new Map();
-            const hit = yield cache.restoreCache([this.filename], this.cacheKey, [`${this.name}-`]);
+            const hit = yield cache.restoreCache([this.filename], this.cacheKey, [
+                `${this.name}-`
+            ]);
             if (!hit) {
-                return {};
+                return;
             }
             const content = fs.readFileSync(this.filename);
             const data = JSON.parse(content.toString());
@@ -302,7 +303,9 @@ function newGithub(url, token) {
 exports.newGithub = newGithub;
 function findChangelogEntry(entries) {
     const entryMap = new Map();
-    entries.forEach(entry => entryMap.set(entry.path, entry));
+    for (const entry of entries) {
+        entryMap.set(entry.path, entry);
+    }
     for (const path of changelog_1.SORTED_FILENAMES) {
         const entry = entryMap.get(path);
         if ((entry === null || entry === void 0 ? void 0 : entry.type) === 'blob')
@@ -373,7 +376,7 @@ class Repository {
         return __awaiter(this, void 0, void 0, function* () {
             const res = yield this.octokit.rest.repos.get({
                 owner: this.owner,
-                repo: this.name,
+                repo: this.name
             });
             return res.data.default_branch;
         });
@@ -491,6 +494,9 @@ function fetchYarnLockFiles(githubToken, path) {
             (0, github_1.fetchContent)(owner, repo, path, head, githubToken),
             (0, github_1.fetchContent)(owner, repo, path, base, githubToken)
         ]);
+        if (!curr) {
+            throw new Error(`${path} is not found in ${head}`);
+        }
         return {
             current: yarnlock_1.YarnLockFile.parse(curr),
             previous: prev ? yarnlock_1.YarnLockFile.parse(prev) : undefined
@@ -515,8 +521,12 @@ function diff(current, previous) {
 }
 function fetchChangelogUrls(packages, npmToken, githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
-        const pkgs = yield Promise.all(packages.map(pkg => (0, package_1.resolvePackage)(pkg.name, npmToken)));
-        const urls = yield Promise.all(pkgs.map(pkg => pkg ? cache().getChangelogUrlOrFind(pkg, githubToken) : Promise.resolve(undefined)));
+        const pkgs = yield Promise.all(packages.map((pkg) => __awaiter(this, void 0, void 0, function* () { return (0, package_1.resolvePackage)(pkg.name, npmToken); })));
+        const urls = yield Promise.all(pkgs.map((pkg) => __awaiter(this, void 0, void 0, function* () {
+            return pkg
+                ? cache().getChangelogUrlOrFind(pkg, githubToken)
+                : Promise.resolve(undefined);
+        })));
         const ret = new Map();
         for (let i = 0; i < packages.length; ++i) {
             const url = urls[i];
@@ -567,7 +577,7 @@ function run() {
             yield postComment(report);
         }
         catch (error) {
-            console.error('unexpected error has occurred', error);
+            core.debug(`unexpected error has occurred ${error}`);
             if (error instanceof Error)
                 core.setFailed(error.message);
         }
@@ -701,8 +711,8 @@ class YarnLockFile {
     nameOf(key) {
         const names = key.split('@');
         let name = names[0];
-        if (name == '') {
-            name = '@' + names[1];
+        if (name === '') {
+            name = `@${names[1]}`;
         }
         return name;
     }
