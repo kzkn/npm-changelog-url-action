@@ -31,12 +31,10 @@ export class Cache {
 }
 
 class ChangelogCache {
-  // TODO: move body to CachedJson
-  private body: Map<string, string> | undefined
-  private json: CachedJson
+  private body: CacheBody<string>
 
   constructor(issueNumber: number) {
-    this.json = new CachedJson('changelog', issueNumber)
+    this.body = new CacheBody('changelog', issueNumber)
   }
 
   async getUrlOrFind(pkg: Package, token: string): Promise<string | undefined> {
@@ -57,46 +55,59 @@ class ChangelogCache {
   }
 
   async restore() {
-    if (this.body) { return }
-
-    this.body = new Map()
-    const data = await this.json.load()
-    for (const [k, v] of Object.entries(data)) {
-      this.body.set(k, v)
-    }
+    await this.body.load(raw => raw as string)
   }
 
   async save() {
-    if (!this.body) { return }
-
-    const data: { [key: string]: string } = {}
-    for (const [k, v] of this.body.entries()) {
-      data[k] = v
-    }
-    await this.json.save(data)
+    await this.body.save(value => value)
   }
 }
 
-class CachedJson {
+class CacheBody<T> {
   private name: string
   private issueNumber: number
+  private body: Map<string, T> | undefined
 
   constructor(name: string, issueNumber: number) {
     this.name = name
     this.issueNumber = issueNumber
   }
 
-  async load(): Promise<{ [key: string]: string }> {
+  has(key: string): boolean {
+    return this.body!.has(key)
+  }
+
+  get(key: string): T | undefined {
+    return this.body!.get(key)
+  }
+
+  set(key: string, value: T) {
+    this.body!.set(key, value)
+  }
+
+  async load(mapper: (raw: unknown) => T) {
+    if (this.body) { return }
+
+    this.body = new Map()
     const hit = await cache.restoreCache([this.filename], this.cacheKey, [`${this.name}-`])
     if (!hit) { return {} }
 
     const content = fs.readFileSync(this.filename)
-    return JSON.parse(content.toString()) as { [key: string]: string }
+    const data = JSON.parse(content.toString()) as { [key: string]: unknown }
+    for (const [k, v] of Object.entries(data)) {
+      const value = mapper(v)
+      this.body.set(k, value)
+    }
   }
 
-  async save(data: { [key: string]: string }) {
-    const content = JSON.stringify(data)
-    fs.writeFileSync(this.filename, content)
+  async save(mapper: (v: T) => any) {
+    if (!this.body) { return }
+
+    const data: { [key: string]: any } = {}
+    for (const [k, v] of this.body.entries()) {
+      data[k] = mapper(v)
+    }
+    fs.writeFileSync(this.filename, JSON.stringify(data))
     try {
       await cache.saveCache([this.filename], this.cacheKey)
     } catch (error) {
