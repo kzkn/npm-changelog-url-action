@@ -25,7 +25,7 @@ export async function fetchContent(
   token: string
 ): Promise<string | undefined> {
   const octokit = getOctokit(token)
-  const res = await octokit.rest.repos.getContent({ owner, repo, path, ref })
+  const res = await octokit.rest.repos.getContent({owner, repo, path, ref})
   const content = (res.data as any).content
   if (content) {
     const buf = Buffer.from(content as string, 'base64')
@@ -34,7 +34,9 @@ export async function fetchContent(
 }
 
 const REPO_URL_REGEXP = new RegExp('https://github.com/([^/]+)/([^#/]+)/?')
-const TREE_URL_REGEXP = new RegExp('https://github.com/([^/]+)/([^/]+)/tree/[^/]+/(.+)$')
+const TREE_URL_REGEXP = new RegExp(
+  'https://github.com/([^/]+)/([^/]+)/tree/[^/]+/(.+)$'
+)
 
 type Github = {
   getChangelogUrl(): Promise<string | undefined>
@@ -97,7 +99,9 @@ export class Repository {
     core.debug(`${this.name} entries: ${entries.length}`)
 
     const entry = findChangelogEntry(entries)
-    if (!entry) { return }
+    if (!entry) {
+      return
+    }
 
     try {
       const res = await this.octokit.rest.repos.getContent({
@@ -107,7 +111,9 @@ export class Repository {
       })
       return (res.data as any).html_url
     } catch (e) {
-      core.debug(`failed to get content ${this.owner}/${this.name}/${entry.path}; ${e}`)
+      core.debug(
+        `failed to get content ${this.owner}/${this.name}/${entry.path}; ${e}`
+      )
       return
     }
   }
@@ -134,7 +140,7 @@ export class Repository {
   async defaultBranch(): Promise<string> {
     const res = await this.octokit.rest.repos.get({
       owner: this.owner,
-      repo: this.name,
+      repo: this.name
     })
     return res.data.default_branch
   }

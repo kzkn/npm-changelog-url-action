@@ -29,7 +29,9 @@ export class Package {
       core.debug(`npm package: name=${this.name} repo=${repository.url}`)
       return newGithub(repository.url as string, githubToken)
     } else {
-      core.debug(`npm package: no repository name=${this.name} repo=${repository} url=${repository?.url}`)
+      core.debug(
+        `npm package: no repository name=${this.name} repo=${repository} url=${repository?.url}`
+      )
     }
   }
 }

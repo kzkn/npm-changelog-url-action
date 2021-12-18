@@ -21,7 +21,12 @@ async function fetchYarnLockFiles(
 ): Promise<{current: YarnLockFile; previous?: YarnLockFile}> {
   const {owner, repo} = github.context.repo
   const head = github.context.ref
-  const base = await baseRefOfPull(owner, repo, github.context.issue.number, githubToken)
+  const base = await baseRefOfPull(
+    owner,
+    repo,
+    github.context.issue.number,
+    githubToken
+  )
   const [curr, prev] = await Promise.all([
     fetchContent(owner, repo, path, head, githubToken),
     fetchContent(owner, repo, path, base, githubToken)
@@ -39,7 +44,10 @@ type UpdatedPackage = {
   previousVersion?: string
 }
 
-function diff(current: YarnLockFile, previous?: YarnLockFile): UpdatedPackage[] {
+function diff(
+  current: YarnLockFile,
+  previous?: YarnLockFile
+): UpdatedPackage[] {
   const updatedPackages: UpdatedPackage[] = []
   const currPkgs = current.installedPackages()
   const prevPkgs = previous?.installedPackages()
@@ -65,7 +73,11 @@ async function fetchChangelogUrls(
     packages.map(pkg => resolvePackage(pkg.name, npmToken))
   )
   const urls = await Promise.all(
-    pkgs.map(pkg => pkg ? cache().getChangelogUrlOrFind(pkg, githubToken) : Promise.resolve(undefined))
+    pkgs.map(pkg =>
+      pkg
+        ? cache().getChangelogUrlOrFind(pkg, githubToken)
+        : Promise.resolve(undefined)
+    )
   )
   const ret = new Map<string, string>()
   for (let i = 0; i < packages.length; ++i) {

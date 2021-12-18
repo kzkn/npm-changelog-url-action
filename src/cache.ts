@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as core from '@actions/core'
 import * as cache from '@actions/cache'
-import type { Package } from './package'
+import type {Package} from './package'
 
 export class Cache {
   private changelogCache: ChangelogCache
@@ -18,15 +18,11 @@ export class Cache {
   }
 
   async restore() {
-    Promise.all([
-      this.changelogCache.restore()
-    ])
+    Promise.all([this.changelogCache.restore()])
   }
 
   async save() {
-    Promise.all([
-      this.changelogCache.save()
-    ])
+    Promise.all([this.changelogCache.save()])
   }
 }
 
@@ -38,12 +34,14 @@ class ChangelogCache {
   }
 
   async getUrlOrFind(pkg: Package, token: string): Promise<string | undefined> {
-    const { name } = pkg
+    const {name} = pkg
     if (this.body?.has(name)) {
       return this.body.get(name)
     } else {
       const gh = pkg.github(token)
-      if (!gh) { return }
+      if (!gh) {
+        return
+      }
 
       const changelog = await gh.getChangelogUrl()
       const url = changelog || gh.releaseUrl
@@ -86,14 +84,20 @@ class CacheBody<T> {
   }
 
   async load(mapper: (raw: unknown) => T) {
-    if (this.body) { return }
+    if (this.body) {
+      return
+    }
 
     this.body = new Map()
-    const hit = await cache.restoreCache([this.filename], this.cacheKey, [`${this.name}-`])
-    if (!hit) { return {} }
+    const hit = await cache.restoreCache([this.filename], this.cacheKey, [
+      `${this.name}-`
+    ])
+    if (!hit) {
+      return {}
+    }
 
     const content = fs.readFileSync(this.filename)
-    const data = JSON.parse(content.toString()) as { [key: string]: unknown }
+    const data = JSON.parse(content.toString()) as {[key: string]: unknown}
     for (const [k, v] of Object.entries(data)) {
       const value = mapper(v)
       this.body.set(k, value)
@@ -101,9 +105,11 @@ class CacheBody<T> {
   }
 
   async save(mapper: (v: T) => any) {
-    if (!this.body) { return }
+    if (!this.body) {
+      return
+    }
 
-    const data: { [key: string]: any } = {}
+    const data: {[key: string]: any} = {}
     for (const [k, v] of this.body.entries()) {
       data[k] = mapper(v)
     }
