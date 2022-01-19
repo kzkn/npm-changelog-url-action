@@ -38,7 +38,7 @@
     "@types/npm-registry-fetch": "^8.0.2",
     "@types/yarnpkg__lockfile": "^1.1.5",
     "@typescript-eslint/parser": "^5.10.0",
-    "@vercel/ncc": "^0.31.1",
+    "@vercel/ncc": "^0.33.1",
     "eslint": "^7.32.0",
     "eslint-plugin-github": "^4.3.2",
     "eslint-plugin-jest": "^25.7.0",
