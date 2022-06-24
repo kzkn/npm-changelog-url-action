@@ -10,6 +10,8 @@ The action works only with `pull_request` event.
 
 - `githubToken` - The GITHUB_TOKEN secret.
 - `npmToken` - A API token of npmjs.org. Required type is `Read-only`
+- `lockPath` _ Lock file path. (default: `yarn.lock`)
+- `onlySpecifiedPackages` - Only to packages specified in `package.json`. (default: `false`)
 
 ## Example
 

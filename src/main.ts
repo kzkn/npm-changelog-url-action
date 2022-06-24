@@ -1,6 +1,7 @@
+import {promises as fs} from 'fs'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import {YarnLockFile} from './yarnlock'
+import {parseLockFile, type InstalledPackages} from './lockfile'
 import {resolvePackage} from './package'
 import {baseRefOfPull, fetchContent} from './github'
 import {markdownTable} from 'markdown-table'
@@ -15,10 +16,10 @@ function cache(): Cache {
   return _cache
 }
 
-async function fetchYarnLockFiles(
+async function fetchInstalledPackages(
   githubToken: string,
-  path: string
-): Promise<{current: YarnLockFile; previous?: YarnLockFile}> {
+  lockPath: string
+): Promise<{current: InstalledPackages; previous?: InstalledPackages}> {
   const {owner, repo} = github.context.repo
   const head = github.context.ref
   const base = await baseRefOfPull(
@@ -28,16 +29,16 @@ async function fetchYarnLockFiles(
     githubToken
   )
   const [curr, prev] = await Promise.all([
-    fetchContent(owner, repo, path, head, githubToken),
-    fetchContent(owner, repo, path, base, githubToken)
+    fetchContent(owner, repo, lockPath, head, githubToken),
+    fetchContent(owner, repo, lockPath, base, githubToken)
   ])
   if (!curr) {
-    throw new Error(`${path} is not found in ${head}`)
+    throw new Error(`${lockPath} is not found in ${head}`)
   }
 
   return {
-    current: YarnLockFile.parse(curr),
-    previous: prev ? YarnLockFile.parse(prev) : undefined
+    current: parseLockFile(curr, lockPath),
+    previous: prev ? parseLockFile(prev, lockPath) : undefined
   }
 }
 
@@ -48,12 +49,10 @@ type UpdatedPackage = {
 }
 
 function diff(
-  current: YarnLockFile,
-  previous?: YarnLockFile
+  currPkgs: InstalledPackages,
+  prevPkgs?: InstalledPackages
 ): UpdatedPackage[] {
   const updatedPackages: UpdatedPackage[] = []
-  const currPkgs = current.installedPackages()
-  const prevPkgs = previous?.installedPackages()
   for (const [key, currPkg] of currPkgs.entries()) {
     const prevPkg = prevPkgs?.get(key)
     if (!prevPkg || currPkg.version !== prevPkg.version) {
@@ -68,7 +67,7 @@ function diff(
 }
 
 async function fetchChangelogUrls(
-  packages: UpdatedPackage[],
+  packages: readonly UpdatedPackage[],
   npmToken: string,
   githubToken: string
 ): Promise<Map<string, string>> {
@@ -94,7 +93,7 @@ async function fetchChangelogUrls(
 }
 
 function generateReport(
-  packages: UpdatedPackage[],
+  packages: readonly UpdatedPackage[],
   urls: Map<string, string>
 ): string {
   return markdownTable([
@@ -120,22 +119,61 @@ ${text}
   })
 }
 
+type PackageJson = {
+  dependencies?: Record<string, string>
+  devDependencies?: Record<string, string>
+}
+
+async function getSpecifiedPackages(file: string): Promise<readonly string[]> {
+  const fileContent = await fs.readFile(file, {
+    encoding: 'utf8'
+  })
+
+  const content = JSON.parse(fileContent) as PackageJson
+  core.debug(`content: ${content}`)
+  return [
+    ...(content?.dependencies ? Object.keys(content.dependencies) : []),
+    ...(content?.devDependencies ? Object.keys(content.devDependencies) : [])
+  ]
+}
+
+async function filterSpecifiedPackages(
+  updates: readonly UpdatedPackage[]
+): Promise<readonly UpdatedPackage[]> {
+  // TODO: Refer to the same directory as lockPath
+  const specifiedPackages = await getSpecifiedPackages('./package.json')
+  return updates.filter(({name}) => specifiedPackages.includes(name))
+}
+
 async function run(): Promise<void> {
   try {
     await cache().restore()
 
     const githubToken: string = core.getInput('githubToken')
-    const path: string = core.getInput('yarnLockPath')
+    const lockPath: string = core.getInput('lockPath')
 
-    const {current, previous} = await fetchYarnLockFiles(githubToken, path)
+    const {current, previous} = await fetchInstalledPackages(
+      githubToken,
+      lockPath
+    )
     const updates = diff(current, previous)
 
+    const onlySpecifiedPackages = core.getInput('onlySpecifiedPackages')
+    const filteredUpdates =
+      onlySpecifiedPackages === 'true'
+        ? await filterSpecifiedPackages(updates)
+        : updates
+
     const npmToken: string = core.getInput('npmToken')
-    const changelogs = await fetchChangelogUrls(updates, npmToken, githubToken)
+    const changelogs = await fetchChangelogUrls(
+      filteredUpdates,
+      npmToken,
+      githubToken
+    )
 
     await cache().save()
 
-    const report = generateReport(updates, changelogs)
+    const report = generateReport(filteredUpdates, changelogs)
     await postComment(report)
   } catch (error) {
     core.debug(`unexpected error has occurred ${error}`)
