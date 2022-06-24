@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import {YarnLockFile} from './yarnlock'
+import {parseLockFile, type InstalledPackages} from './lockfile'
 import {resolvePackage} from './package'
 import {baseRefOfPull, fetchContent} from './github'
 import {markdownTable} from 'markdown-table'
@@ -15,10 +15,10 @@ function cache(): Cache {
   return _cache
 }
 
-async function fetchYarnLockFiles(
+async function fetchInstalledPackages(
   githubToken: string,
   path: string
-): Promise<{current: YarnLockFile; previous?: YarnLockFile}> {
+): Promise<{current: InstalledPackages; previous?: InstalledPackages}> {
   const {owner, repo} = github.context.repo
   const head = github.context.ref
   const base = await baseRefOfPull(
@@ -36,8 +36,8 @@ async function fetchYarnLockFiles(
   }
 
   return {
-    current: YarnLockFile.parse(curr),
-    previous: prev ? YarnLockFile.parse(prev) : undefined
+    current: parseLockFile(curr, path),
+    previous: prev ? parseLockFile(prev, path) : undefined
   }
 }
 
@@ -48,12 +48,10 @@ type UpdatedPackage = {
 }
 
 function diff(
-  current: YarnLockFile,
-  previous?: YarnLockFile
+  currPkgs: InstalledPackages,
+  prevPkgs?: InstalledPackages
 ): UpdatedPackage[] {
   const updatedPackages: UpdatedPackage[] = []
-  const currPkgs = current.installedPackages()
-  const prevPkgs = previous?.installedPackages()
   for (const [key, currPkg] of currPkgs.entries()) {
     const prevPkg = prevPkgs?.get(key)
     if (!prevPkg || currPkg.version !== prevPkg.version) {
@@ -125,9 +123,9 @@ async function run(): Promise<void> {
     await cache().restore()
 
     const githubToken: string = core.getInput('githubToken')
-    const path: string = core.getInput('yarnLockPath')
+    const path: string = core.getInput('lockPath')
 
-    const {current, previous} = await fetchYarnLockFiles(githubToken, path)
+    const {current, previous} = await fetchInstalledPackages(githubToken, path)
     const updates = diff(current, previous)
 
     const npmToken: string = core.getInput('npmToken')

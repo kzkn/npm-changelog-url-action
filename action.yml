@@ -6,8 +6,8 @@ inputs:
     required: true
   npmToken:
     required: true
-  yarnLockPath:
-    default: 'yarn.lock'
+  lockPath:
+    default: "yarn.lock"
 runs:
-  using: 'node12'
-  main: 'dist/index.js'
+  using: "node16"
+  main: "dist/index.js"
