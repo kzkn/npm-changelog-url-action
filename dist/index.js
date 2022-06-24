@@ -564,6 +564,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const fs_1 = __nccwpck_require__(57147);
 const core = __importStar(__nccwpck_require__(42186));
 const github = __importStar(__nccwpck_require__(95438));
 const lockfile_1 = __nccwpck_require__(64070);
@@ -579,21 +580,21 @@ function cache() {
     }
     return _cache;
 }
-function fetchInstalledPackages(githubToken, path) {
+function fetchInstalledPackages(githubToken, lockPath) {
     return __awaiter(this, void 0, void 0, function* () {
         const { owner, repo } = github.context.repo;
         const head = github.context.ref;
         const base = yield (0, github_1.baseRefOfPull)(owner, repo, github.context.issue.number, githubToken);
         const [curr, prev] = yield Promise.all([
-            (0, github_1.fetchContent)(owner, repo, path, head, githubToken),
-            (0, github_1.fetchContent)(owner, repo, path, base, githubToken)
+            (0, github_1.fetchContent)(owner, repo, lockPath, head, githubToken),
+            (0, github_1.fetchContent)(owner, repo, lockPath, base, githubToken)
         ]);
         if (!curr) {
-            throw new Error(`${path} is not found in ${head}`);
+            throw new Error(`${lockPath} is not found in ${head}`);
         }
         return {
-            current: (0, lockfile_1.parseLockFile)(curr, path),
-            previous: prev ? (0, lockfile_1.parseLockFile)(prev, path) : undefined
+            current: (0, lockfile_1.parseLockFile)(curr, lockPath),
+            previous: prev ? (0, lockfile_1.parseLockFile)(prev, lockPath) : undefined
         };
     });
 }
@@ -654,18 +655,42 @@ ${text}
         });
     });
 }
+function getSpecifiedPackages(file) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const fileContent = yield fs_1.promises.readFile(file, {
+            encoding: 'utf8'
+        });
+        const content = JSON.parse(fileContent);
+        core.debug(`content: ${content}`);
+        return [
+            ...((content === null || content === void 0 ? void 0 : content.dependencies) ? Object.keys(content.dependencies) : []),
+            ...((content === null || content === void 0 ? void 0 : content.devDependencies) ? Object.keys(content.devDependencies) : [])
+        ];
+    });
+}
+function filterSpecifiedPackages(updates) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // TODO: Refer to the same directory as lockPath
+        const specifiedPackages = yield getSpecifiedPackages('./package.json');
+        return updates.filter(({ name }) => specifiedPackages.includes(name));
+    });
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield cache().restore();
             const githubToken = core.getInput('githubToken');
-            const path = core.getInput('lockPath');
-            const { current, previous } = yield fetchInstalledPackages(githubToken, path);
+            const lockPath = core.getInput('lockPath');
+            const { current, previous } = yield fetchInstalledPackages(githubToken, lockPath);
             const updates = diff(current, previous);
+            const onlySpecifiedPackages = core.getInput('onlySpecifiedPackages');
+            const filteredUpdates = onlySpecifiedPackages === 'true'
+                ? yield filterSpecifiedPackages(updates)
+                : updates;
             const npmToken = core.getInput('npmToken');
-            const changelogs = yield fetchChangelogUrls(updates, npmToken, githubToken);
+            const changelogs = yield fetchChangelogUrls(filteredUpdates, npmToken, githubToken);
             yield cache().save();
-            const report = generateReport(updates, changelogs);
+            const report = generateReport(filteredUpdates, changelogs);
             yield postComment(report);
         }
         catch (error) {
