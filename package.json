@@ -28,7 +28,7 @@
     "@actions/cache": "^1.0.8",
     "@actions/core": "^1.6.0",
     "@actions/github": "^5.0.0",
-    "@aki77/actions-replace-comment": "^0.5.2",
+    "@aki77/actions-replace-comment": "^0.5.4",
     "@yarnpkg/lockfile": "^1.1.0",
     "markdown-table": "^3.0.2",
     "npm-registry-fetch": "^12.0.0"
