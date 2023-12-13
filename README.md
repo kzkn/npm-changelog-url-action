@@ -24,14 +24,11 @@ on:
       - "yarn.lock"
 
 jobs:
-  changelog:
+  npm_changelog:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v2
-
+      - uses: actions/checkout@v4
       - uses: kzkn/npm-changelog-url-action@v1
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
