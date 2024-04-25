@@ -441,7 +441,7 @@ class Tree {
 
 /***/ }),
 
-/***/ 64070:
+/***/ 62960:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -567,7 +567,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const fs_1 = __nccwpck_require__(57147);
 const core = __importStar(__nccwpck_require__(42186));
 const github = __importStar(__nccwpck_require__(95438));
-const lockfile_1 = __nccwpck_require__(64070);
+const lockFile_1 = __nccwpck_require__(62960);
 const package_1 = __nccwpck_require__(92536);
 const github_1 = __nccwpck_require__(85928);
 const markdown_table_1 = __nccwpck_require__(94701);
@@ -593,8 +593,8 @@ function fetchInstalledPackages(githubToken, lockPath) {
             throw new Error(`${lockPath} is not found in ${head}`);
         }
         return {
-            current: (0, lockfile_1.parseLockFile)(curr, lockPath),
-            previous: prev ? (0, lockfile_1.parseLockFile)(prev, lockPath) : undefined
+            current: (0, lockFile_1.parseLockFile)(curr, lockPath),
+            previous: prev ? (0, lockFile_1.parseLockFile)(prev, lockPath) : undefined
         };
     });
 }
@@ -694,9 +694,11 @@ function run() {
             yield postComment(report);
         }
         catch (error) {
-            core.debug(`unexpected error has occurred ${error}`);
-            if (error instanceof Error)
-                core.setFailed(error.message);
+            const errorMessage = `Unexpected error has occurred: ${error}`;
+            core.debug(errorMessage);
+            if (error instanceof Error) {
+                core.setFailed(`${errorMessage}\n${error.stack}`);
+            }
         }
     });
 }
@@ -107806,7 +107808,7 @@ module.exports = JSON.parse('[["0","\\u0000",128],["a1","｡",62],["8140","　�
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"_args":[["make-fetch-happen@9.1.0","/Users/aki/src/github.com/aki77/npm-changelog-url-action"]],"_from":"make-fetch-happen@9.1.0","_id":"make-fetch-happen@9.1.0","_inBundle":false,"_integrity":"sha512-+zopwDy7DNknmwPQplem5lAZX/eCOzSvSNNcSKm5eVwTkOBzoktEfXsa9L23J/GIRhxRsaxzkPEhrJEpE2F4Gg==","_location":"/make-fetch-happen","_phantomChildren":{},"_requested":{"type":"version","registry":true,"raw":"make-fetch-happen@9.1.0","name":"make-fetch-happen","escapedName":"make-fetch-happen","rawSpec":"9.1.0","saveSpec":null,"fetchSpec":"9.1.0"},"_requiredBy":["/npm-registry-fetch"],"_resolved":"https://registry.npmjs.org/make-fetch-happen/-/make-fetch-happen-9.1.0.tgz","_spec":"9.1.0","_where":"/Users/aki/src/github.com/aki77/npm-changelog-url-action","author":{"name":"Kat Marchán","email":"kzm@zkat.tech"},"bugs":{"url":"https://github.com/npm/make-fetch-happen/issues"},"dependencies":{"agentkeepalive":"^4.1.3","cacache":"^15.2.0","http-cache-semantics":"^4.1.0","http-proxy-agent":"^4.0.1","https-proxy-agent":"^5.0.0","is-lambda":"^1.0.1","lru-cache":"^6.0.0","minipass":"^3.1.3","minipass-collect":"^1.0.2","minipass-fetch":"^1.3.2","minipass-flush":"^1.0.5","minipass-pipeline":"^1.2.4","negotiator":"^0.6.2","promise-retry":"^2.0.1","socks-proxy-agent":"^6.0.0","ssri":"^8.0.0"},"description":"Opinionated, caching, retrying fetch client","devDependencies":{"eslint":"^7.26.0","eslint-plugin-import":"^2.23.2","eslint-plugin-node":"^11.1.0","eslint-plugin-promise":"^5.1.0","eslint-plugin-standard":"^5.0.0","mkdirp":"^1.0.4","nock":"^13.0.11","npmlog":"^5.0.0","require-inject":"^1.4.2","rimraf":"^3.0.2","safe-buffer":"^5.2.1","standard-version":"^9.3.0","tap":"^15.0.9"},"engines":{"node":">= 10"},"files":["lib"],"homepage":"https://github.com/npm/make-fetch-happen#readme","keywords":["http","request","fetch","mean girls","caching","cache","subresource integrity"],"license":"ISC","main":"lib/index.js","name":"make-fetch-happen","repository":{"type":"git","url":"git+https://github.com/npm/make-fetch-happen.git"},"scripts":{"eslint":"eslint","lint":"npm run eslint -- lib test","lintfix":"npm run lint -- --fix","posttest":"npm run lint","postversion":"npm publish","prepublishOnly":"git push --follow-tags","preversion":"npm t","test":"tap"},"tap":{"color":1,"files":"test/*.js","check-coverage":true},"version":"9.1.0"}');
+module.exports = JSON.parse('{"name":"make-fetch-happen","version":"9.1.0","description":"Opinionated, caching, retrying fetch client","main":"lib/index.js","files":["lib"],"scripts":{"preversion":"npm t","postversion":"npm publish","prepublishOnly":"git push --follow-tags","test":"tap","posttest":"npm run lint","eslint":"eslint","lint":"npm run eslint -- lib test","lintfix":"npm run lint -- --fix"},"repository":"https://github.com/npm/make-fetch-happen","keywords":["http","request","fetch","mean girls","caching","cache","subresource integrity"],"author":{"name":"Kat Marchán","email":"kzm@zkat.tech","twitter":"maybekatz"},"license":"ISC","dependencies":{"agentkeepalive":"^4.1.3","cacache":"^15.2.0","http-cache-semantics":"^4.1.0","http-proxy-agent":"^4.0.1","https-proxy-agent":"^5.0.0","is-lambda":"^1.0.1","lru-cache":"^6.0.0","minipass":"^3.1.3","minipass-collect":"^1.0.2","minipass-fetch":"^1.3.2","minipass-flush":"^1.0.5","minipass-pipeline":"^1.2.4","negotiator":"^0.6.2","promise-retry":"^2.0.1","socks-proxy-agent":"^6.0.0","ssri":"^8.0.0"},"devDependencies":{"eslint":"^7.26.0","eslint-plugin-import":"^2.23.2","eslint-plugin-node":"^11.1.0","eslint-plugin-promise":"^5.1.0","eslint-plugin-standard":"^5.0.0","mkdirp":"^1.0.4","nock":"^13.0.11","npmlog":"^5.0.0","require-inject":"^1.4.2","rimraf":"^3.0.2","safe-buffer":"^5.2.1","standard-version":"^9.3.0","tap":"^15.0.9"},"engines":{"node":">= 10"},"tap":{"color":1,"files":"test/*.js","check-coverage":true}}');
 
 /***/ }),
 
@@ -107838,7 +107840,7 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"_args":[["npm-registry-fetch@12.0.0","/Users/aki/src/github.com/aki77/npm-changelog-url-action"]],"_from":"npm-registry-fetch@12.0.0","_id":"npm-registry-fetch@12.0.0","_inBundle":false,"_integrity":"sha512-nd1I90UHoETjgWpo3GbcoM1l2S4JCUpzDcahU4x/GVCiDQ6yRiw2KyDoPVD8+MqODbPtWwHHGiyc4O5sgdEqPQ==","_location":"/npm-registry-fetch","_phantomChildren":{},"_requested":{"type":"version","registry":true,"raw":"npm-registry-fetch@12.0.0","name":"npm-registry-fetch","escapedName":"npm-registry-fetch","rawSpec":"12.0.0","saveSpec":null,"fetchSpec":"12.0.0"},"_requiredBy":["/"],"_resolved":"https://registry.npmjs.org/npm-registry-fetch/-/npm-registry-fetch-12.0.0.tgz","_spec":"12.0.0","_where":"/Users/aki/src/github.com/aki77/npm-changelog-url-action","author":{"name":"GitHub Inc."},"bugs":{"url":"https://github.com/npm/npm-registry-fetch/issues"},"dependencies":{"make-fetch-happen":"^9.0.1","minipass":"^3.1.3","minipass-fetch":"^1.3.0","minipass-json-stream":"^1.0.1","minizlib":"^2.0.0","npm-package-arg":"^8.0.0"},"description":"Fetch-based http client for use with npm registry APIs","devDependencies":{"@npmcli/template-oss":"^2.3.1","cacache":"^15.0.0","nock":"^13.1.0","npmlog":"^4.1.2","require-inject":"^1.4.4","ssri":"^8.0.0","tap":"^15.0.4"},"engines":{"node":"^12.13.0 || ^14.15.0 || >=16"},"files":["bin","lib"],"homepage":"https://github.com/npm/npm-registry-fetch#readme","keywords":["npm","registry","fetch"],"license":"ISC","main":"lib","name":"npm-registry-fetch","repository":{"type":"git","url":"git+https://github.com/npm/npm-registry-fetch.git"},"scripts":{"eslint":"eslint","lint":"eslint \'**/*.js\'","lintfix":"npm run lint -- --fix","npmclilint":"npmcli-lint","postlint":"npm-template-check","postsnap":"npm run lintfix --","posttest":"npm run lint","postversion":"npm publish","prepublishOnly":"git push origin --follow-tags","preversion":"npm test","snap":"tap","test":"tap"},"tap":{"check-coverage":true,"test-ignore":"test[\\\\\\\\/](util|cache)[\\\\\\\\/]"},"templateVersion":"2.3.1","version":"12.0.0"}');
+module.exports = JSON.parse('{"name":"npm-registry-fetch","version":"12.0.0","description":"Fetch-based http client for use with npm registry APIs","main":"lib","files":["bin","lib"],"scripts":{"eslint":"eslint","lint":"eslint \'**/*.js\'","lintfix":"npm run lint -- --fix","prepublishOnly":"git push origin --follow-tags","preversion":"npm test","postversion":"npm publish","test":"tap","posttest":"npm run lint","npmclilint":"npmcli-lint","postsnap":"npm run lintfix --","postlint":"npm-template-check","snap":"tap"},"repository":"https://github.com/npm/npm-registry-fetch","keywords":["npm","registry","fetch"],"author":"GitHub Inc.","license":"ISC","dependencies":{"make-fetch-happen":"^9.0.1","minipass":"^3.1.3","minipass-fetch":"^1.3.0","minipass-json-stream":"^1.0.1","minizlib":"^2.0.0","npm-package-arg":"^8.0.0"},"devDependencies":{"@npmcli/template-oss":"^2.3.1","cacache":"^15.0.0","nock":"^13.1.0","npmlog":"^4.1.2","require-inject":"^1.4.4","ssri":"^8.0.0","tap":"^15.0.4"},"tap":{"check-coverage":true,"test-ignore":"test[\\\\\\\\/](util|cache)[\\\\\\\\/]"},"engines":{"node":"^12.13.0 || ^14.15.0 || >=16"},"templateVersion":"2.3.1"}');
 
 /***/ }),
 
