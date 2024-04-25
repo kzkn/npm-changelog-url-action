@@ -176,8 +176,11 @@ async function run(): Promise<void> {
     const report = generateReport(filteredUpdates, changelogs)
     await postComment(report)
   } catch (error) {
-    core.debug(`unexpected error has occurred ${error}`)
-    if (error instanceof Error) core.setFailed(error.message)
+    const errorMessage = `Unexpected error has occurred: ${error}`
+    core.debug(errorMessage)
+    if (error instanceof Error) {
+      core.setFailed(`${errorMessage}\n${error.stack}`)
+    }
   }
 }
 
