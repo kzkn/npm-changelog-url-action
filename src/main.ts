@@ -1,7 +1,7 @@
 import {promises as fs} from 'fs'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import {parseLockFile, type InstalledPackages} from './lockfile'
+import {parseLockFile, type InstalledPackages} from './lockFile'
 import {resolvePackage} from './package'
 import {baseRefOfPull, fetchContent} from './github'
 import {markdownTable} from 'markdown-table'
