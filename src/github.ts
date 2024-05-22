@@ -26,12 +26,21 @@ export async function fetchContent(
 ): Promise<string | undefined> {
   const octokit = getOctokit(token)
   core.debug(`fetching ${owner}/${repo}/${path} at ${ref}`)
-  const res = await octokit.rest.repos.getContent({owner, repo, path, ref})
-  core.debug(`content: ${JSON.stringify(res.data)}`)
-  const content = (res.data as any).content
-  if (content) {
-    const buf = Buffer.from(content as string, 'base64')
-    return buf.toString('utf-8')
+
+  try {
+    const res = await octokit.rest.repos.getContent({owner, repo, path, ref})
+    core.debug(`content: ${JSON.stringify(res.data)}`)
+    const content = (res.data as any).content
+    if (content) {
+      const buf = Buffer.from(content as string, 'base64')
+      return buf.toString('utf-8')
+    }
+  } catch (error) {
+    core.debug(`failed to fetch ${owner}/${repo}/${path} at ${ref}; ${error}`)
+    if (error instanceof Error && error.name === 'HttpError') {
+      return
+    }
+    throw error
   }
 }
 
