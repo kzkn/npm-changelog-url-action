@@ -27,7 +27,7 @@ export function parseYarnLockFile(text: string): InstalledPackages {
     const name = parts[0] === '' ? `@${parts[1]}` : parts[0]
     pkgs.set(name, {
       name,
-      version: content[key].version as string
+      version: content[key].version
     })
   }
   return pkgs
