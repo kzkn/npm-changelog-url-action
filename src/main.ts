@@ -152,10 +152,13 @@ async function run(): Promise<void> {
     const githubToken: string = core.getInput('githubToken')
     const lockPath: string = core.getInput('lockPath')
 
+    core.debug(`lockPath: ${lockPath}`)
     const {current, previous} = await fetchInstalledPackages(
       githubToken,
       lockPath
     )
+    core.debug(`current: ${current}, previous: ${previous}`)
+
     const updates = diff(current, previous)
 
     const onlySpecifiedPackages = core.getInput('onlySpecifiedPackages')

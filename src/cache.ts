@@ -89,9 +89,11 @@ class CacheBody<T> {
     }
 
     this.body = new Map()
+    core.debug(`restore cache: ${this.filename}`)
     const hit = await cache.restoreCache([this.filename], this.cacheKey, [
       `${this.name}-`
     ])
+    core.debug(`cache hit: ${hit}`)
     if (!hit) {
       return
     }
