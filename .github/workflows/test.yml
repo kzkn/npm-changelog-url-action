@@ -29,3 +29,4 @@ jobs:
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           lockPath: 'pnpm-lock.yaml'
+          onlySpecifiedPackages: true
