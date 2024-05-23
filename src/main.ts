@@ -4,7 +4,6 @@ import * as github from '@actions/github'
 import {parseLockFile, type InstalledPackages} from './lockFile'
 import {resolvePackage} from './package'
 import {baseRefOfPull, fetchContent} from './github'
-import {markdownTable} from 'markdown-table'
 import {Cache} from './cache'
 import replaceComment from '@aki77/actions-replace-comment'
 
@@ -92,10 +91,12 @@ async function fetchChangelogUrls(
   return ret
 }
 
-function generateReport(
+async function generateReport(
   packages: readonly UpdatedPackage[],
   urls: Map<string, string>
-): string {
+): Promise<string> {
+  const {markdownTable} = await import('markdown-table')
+
   return markdownTable([
     ['Package', 'Before', 'After', 'ChangeLog URL'],
     ...packages.map(({name, currentVersion, previousVersion}) => [
@@ -176,7 +177,7 @@ async function run(): Promise<void> {
 
     await cache().save()
 
-    const report = generateReport(filteredUpdates, changelogs)
+    const report = await generateReport(filteredUpdates, changelogs)
     await postComment(report)
   } catch (error) {
     const errorMessage = `Unexpected error has occurred: ${error}`
