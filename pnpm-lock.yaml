@@ -30,6 +30,9 @@ importers:
         specifier: ^17.0.1
         version: 17.0.1
     devDependencies:
+      '@jest/globals':
+        specifier: ^29.7.0
+        version: 29.7.0
       '@pnpm/lockfile-types':
         specifier: ^7.0.0
         version: 7.0.0

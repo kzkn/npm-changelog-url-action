@@ -37,6 +37,7 @@
     "npm-registry-fetch": "^17.0.1"
   },
   "devDependencies": {
+    "@jest/globals": "^29.7.0",
     "@pnpm/lockfile-types": "^7.0.0",
     "@types/jest": "^29.5.12",
     "@types/js-yaml": "^4.0.5",
