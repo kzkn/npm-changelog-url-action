@@ -5,7 +5,7 @@ inputs:
   githubToken:
     required: true
   npmToken:
-    required: true
+    required: false
   lockPath:
     default: "yarn.lock"
   onlySpecifiedPackages:
