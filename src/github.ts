@@ -25,11 +25,22 @@ export async function fetchContent(
   token: string
 ): Promise<string | undefined> {
   const octokit = getOctokit(token)
-  const res = await octokit.rest.repos.getContent({owner, repo, path, ref})
-  const content = (res.data as any).content
-  if (content) {
-    const buf = Buffer.from(content as string, 'base64')
-    return buf.toString('utf-8')
+  core.debug(`fetching ${owner}/${repo}/${path} at ${ref}`)
+
+  try {
+    const res = await octokit.rest.repos.getContent({owner, repo, path, ref})
+    core.debug(`content: ${JSON.stringify(res.data)}`)
+    const content = (res.data as any).content
+    if (content) {
+      const buf = Buffer.from(content as string, 'base64')
+      return buf.toString('utf-8')
+    }
+  } catch (error) {
+    core.debug(`failed to fetch ${owner}/${repo}/${path} at ${ref}; ${error}`)
+    if (error instanceof Error && error.name === 'HttpError') {
+      return
+    }
+    throw error
   }
 }
 
@@ -182,11 +193,13 @@ class Tree {
 
   async entries(): Promise<FileEntry[]> {
     const defaultBranch = await this.defaultBranch()
+    core.debug(`${this.repo} default branch: ${defaultBranch}`)
     const res = await this.octokit.rest.git.getTree({
       owner: this.owner,
       repo: this.repo,
       tree_sha: `${defaultBranch}:${this.path}`
     })
+    core.debug(`tree entries: ${res.data.tree.length}`)
     return res.data.tree as FileEntry[]
   }
 

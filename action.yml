@@ -5,12 +5,12 @@ inputs:
   githubToken:
     required: true
   npmToken:
-    required: true
+    required: false
   lockPath:
     default: "yarn.lock"
   onlySpecifiedPackages:
     type: boolean
     default: false
 runs:
-  using: "node16"
+  using: "node20"
   main: "dist/index.js"

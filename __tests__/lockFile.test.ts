@@ -1,4 +1,4 @@
-import {parseYarnLockFile, parsePnpmLockFile} from '../src/lockfile'
+import {parseYarnLockFile, parsePnpmLockFile} from '../src/lockFile'
 import {expect, test} from '@jest/globals'
 
 test('yarn lockfile parse', () => {
@@ -29,7 +29,7 @@ jquery@^3.5.1:
   expect(pkgs.has('jquery')).toBeTruthy()
 })
 
-test('pnpm lockfile parse', () => {
+test('pnpm@v5 lockfile parse', () => {
   const text = `lockfileVersion: 5.4
 
 specifiers:
@@ -53,6 +53,45 @@ packages:
     dependencies:
       '@popperjs/core': 2.11.5
     dev: false
+`
+
+  const pkgs = parsePnpmLockFile(text)
+  expect(pkgs.size).toEqual(2)
+  expect(pkgs.has('bootstrap')).toBeTruthy()
+  expect(pkgs.has('@popperjs/core')).toBeTruthy()
+})
+
+test('pnpm@v9 lockfile parse', () => {
+  const text = `lockfileVersion: '9.0'
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      bootstrap:
+        specifier: ^5.3.3
+        version: 5.3.3(@popperjs/core@2.11.8)
+
+packages:
+
+  '@popperjs/core@2.11.8':
+    resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
+
+  bootstrap@5.3.3:
+    resolution: {integrity: sha512-8HLCdWgyoMguSO9o+aH+iuZ+aht+mzW0u3HIMzVu7Srrpv7EBBxTnrFlSCskwdY1+EOFQSm7uMJhNQHkdPcmjg==}
+    peerDependencies:
+      '@popperjs/core': ^2.11.8
+
+snapshots:
+
+  '@popperjs/core@2.11.8': {}
+
+  bootstrap@5.3.3(@popperjs/core@2.11.8):
+    dependencies:
+      '@popperjs/core': 2.11.8
 `
 
   const pkgs = parsePnpmLockFile(text)

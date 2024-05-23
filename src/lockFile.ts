@@ -27,7 +27,7 @@ export function parseYarnLockFile(text: string): InstalledPackages {
     const name = parts[0] === '' ? `@${parts[1]}` : parts[0]
     pkgs.set(name, {
       name,
-      version: content[key].version as string
+      version: content[key].version
     })
   }
   return pkgs
@@ -38,10 +38,13 @@ export function parsePnpmLockFile(text: string): InstalledPackages {
   const pkgs = new Map<string, InstalledPackage>()
   if (!lockfileFile.packages) return pkgs
 
+  const lockfileVersion =
+    typeof lockfileFile.lockfileVersion === 'string'
+      ? Number.parseFloat(lockfileFile.lockfileVersion)
+      : lockfileFile.lockfileVersion
+
   for (const key of Object.keys(lockfileFile.packages)) {
-    const parts = key.split('_')[0].split('/')
-    const name = parts.slice(1, -1).join('/')
-    const version = parts.slice(-1)[0]
+    const {name, version} = parsePnpmPackageKey(key, lockfileVersion)
 
     pkgs.set(name, {
       name,
@@ -49,4 +52,23 @@ export function parsePnpmLockFile(text: string): InstalledPackages {
     })
   }
   return pkgs
+}
+
+function parsePnpmPackageKey(
+  key: string,
+  lockfileVersion: number
+): {name: string; version: string} {
+  if (lockfileVersion >= 9) {
+    // Example: @popperjs/core@2.11.8
+    const parts = key.split('@')
+    const version = parts[parts.length - 1]
+    const name = parts.slice(0, -1).join('@')
+    return {name, version}
+  } else {
+    // Example: /@popperjs/core/2.11.5
+    const parts = key.split('_')[0].split('/')
+    const name = parts.slice(1, -1).join('/')
+    const version = parts.slice(-1)[0]
+    return {name, version}
+  }
 }
