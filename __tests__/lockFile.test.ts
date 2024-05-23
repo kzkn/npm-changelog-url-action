@@ -1,4 +1,4 @@
-import {parseYarnLockFile, parsePnpmLockFile} from '../src/lockfile'
+import {parseYarnLockFile, parsePnpmLockFile} from '../src/lockFile'
 import {expect, test} from '@jest/globals'
 
 test('yarn lockfile parse', () => {
