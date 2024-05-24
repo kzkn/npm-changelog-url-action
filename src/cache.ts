@@ -17,7 +17,7 @@ export class Cache {
     try {
       return await this.changelogCache.getUrlOrFind(pkg, githubToken)
     } catch (e) {
-      core.warning(`cache: failed to get changelog url of ${pkg}; ${e}`)
+      core.warning(`cache: failed to get changelog url of ${pkg.name}; ${e}`)
       return Promise.resolve(undefined)
     }
   }
