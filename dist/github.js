@@ -29,12 +29,18 @@ const github_1 = require("@actions/github");
 const changelog_1 = require("./changelog");
 async function baseRefOfPull(owner, repo, pullNumber, token) {
     const octokit = (0, github_1.getOctokit)(token);
-    const res = await octokit.rest.pulls.get({
-        owner,
-        repo,
-        pull_number: pullNumber
-    });
-    return res.data.base.ref;
+    try {
+        const res = await octokit.rest.pulls.get({
+            owner,
+            repo,
+            pull_number: pullNumber
+        });
+        return res.data.base.ref;
+    }
+    catch (e) {
+        core.warning(`failed to get baseRefOfPull ${owner}/${repo} pull_number=${pullNumber}; ${e}`);
+        throw e;
+    }
 }
 exports.baseRefOfPull = baseRefOfPull;
 async function fetchContent(owner, repo, path, ref, token) {
@@ -50,7 +56,7 @@ async function fetchContent(owner, repo, path, ref, token) {
         }
     }
     catch (error) {
-        core.debug(`failed to fetch ${owner}/${repo}/${path} at ${ref}; ${error}`);
+        core.warning(`failed to fetch ${owner}/${repo}/${path} at ${ref}; ${error}`);
         if (error instanceof Error && error.name === 'HttpError') {
             return;
         }
@@ -119,7 +125,7 @@ class Repository {
             return res.data.html_url;
         }
         catch (e) {
-            core.debug(`failed to get content ${this.owner}/${this.name}/${entry.path}; ${e}`);
+            core.warning(`failed to get content ${this.owner}/${this.name}/${entry.path}; ${e}`);
             return;
         }
     }
@@ -132,19 +138,31 @@ class Repository {
     async rootFileEntries() {
         const branch = await this.defaultBranch();
         core.debug(`${this.name} default branch: ${branch}`);
-        const res = await this.octokit.rest.git.getTree({
-            owner: this.owner,
-            repo: this.name,
-            tree_sha: branch
-        });
-        return res.data.tree;
+        try {
+            const res = await this.octokit.rest.git.getTree({
+                owner: this.owner,
+                repo: this.name,
+                tree_sha: branch
+            });
+            return res.data.tree;
+        }
+        catch (e) {
+            core.warning(`failed to getTree ${this.owner}/${this.name}/${branch}; ${e}`);
+            throw e;
+        }
     }
     async defaultBranch() {
-        const res = await this.octokit.rest.repos.get({
-            owner: this.owner,
-            repo: this.name
-        });
-        return res.data.default_branch;
+        try {
+            const res = await this.octokit.rest.repos.get({
+                owner: this.owner,
+                repo: this.name
+            });
+            return res.data.default_branch;
+        }
+        catch (e) {
+            core.warning(`failed to get defaultBranch ${this.owner}/${this.name}; ${e}`);
+            throw e;
+        }
     }
 }
 exports.Repository = Repository;
@@ -186,11 +204,17 @@ class Tree {
         return res.data.tree;
     }
     async defaultBranch() {
-        const res = await this.octokit.rest.repos.get({
-            owner: this.owner,
-            repo: this.repo
-        });
-        return res.data.default_branch;
+        try {
+            const res = await this.octokit.rest.repos.get({
+                owner: this.owner,
+                repo: this.repo
+            });
+            return res.data.default_branch;
+        }
+        catch (e) {
+            core.warning(`github tree: failed to get defaultBranch ${this.owner}/${this.repo}; ${e}`);
+            throw e;
+        }
     }
 }
 //# sourceMappingURL=github.js.map

@@ -9,12 +9,19 @@ export async function baseRefOfPull(
   token: string
 ): Promise<string> {
   const octokit = getOctokit(token)
-  const res = await octokit.rest.pulls.get({
-    owner,
-    repo,
-    pull_number: pullNumber
-  })
-  return res.data.base.ref
+  try {
+    const res = await octokit.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: pullNumber
+    })
+    return res.data.base.ref
+  } catch (e) {
+    core.warning(
+      `failed to get baseRefOfPull ${owner}/${repo} pull_number=${pullNumber}; ${e}`
+    )
+    throw e
+  }
 }
 
 export async function fetchContent(
@@ -36,7 +43,7 @@ export async function fetchContent(
       return buf.toString('utf-8')
     }
   } catch (error) {
-    core.debug(`failed to fetch ${owner}/${repo}/${path} at ${ref}; ${error}`)
+    core.warning(`failed to fetch ${owner}/${repo}/${path} at ${ref}; ${error}`)
     if (error instanceof Error && error.name === 'HttpError') {
       return
     }
@@ -124,7 +131,7 @@ export class Repository {
       })
       return (res.data as any).html_url
     } catch (e) {
-      core.debug(
+      core.warning(
         `failed to get content ${this.owner}/${this.name}/${entry.path}; ${e}`
       )
       return
@@ -142,20 +149,34 @@ export class Repository {
   async rootFileEntries(): Promise<FileEntry[]> {
     const branch = await this.defaultBranch()
     core.debug(`${this.name} default branch: ${branch}`)
-    const res = await this.octokit.rest.git.getTree({
-      owner: this.owner,
-      repo: this.name,
-      tree_sha: branch
-    })
-    return res.data.tree as FileEntry[]
+    try {
+      const res = await this.octokit.rest.git.getTree({
+        owner: this.owner,
+        repo: this.name,
+        tree_sha: branch
+      })
+      return res.data.tree as FileEntry[]
+    } catch (e) {
+      core.warning(
+        `failed to getTree ${this.owner}/${this.name}/${branch}; ${e}`
+      )
+      throw e
+    }
   }
 
   async defaultBranch(): Promise<string> {
-    const res = await this.octokit.rest.repos.get({
-      owner: this.owner,
-      repo: this.name
-    })
-    return res.data.default_branch
+    try {
+      const res = await this.octokit.rest.repos.get({
+        owner: this.owner,
+        repo: this.name
+      })
+      return res.data.default_branch
+    } catch (e) {
+      core.warning(
+        `failed to get defaultBranch ${this.owner}/${this.name}; ${e}`
+      )
+      throw e
+    }
   }
 }
 
@@ -204,10 +225,17 @@ class Tree {
   }
 
   async defaultBranch(): Promise<string> {
-    const res = await this.octokit.rest.repos.get({
-      owner: this.owner,
-      repo: this.repo
-    })
-    return res.data.default_branch
+    try {
+      const res = await this.octokit.rest.repos.get({
+        owner: this.owner,
+        repo: this.repo
+      })
+      return res.data.default_branch
+    } catch (e) {
+      core.warning(
+        `github tree: failed to get defaultBranch ${this.owner}/${this.repo}; ${e}`
+      )
+      throw e
+    }
   }
 }
