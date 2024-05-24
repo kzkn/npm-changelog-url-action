@@ -44,6 +44,9 @@ export async function fetchContent(
     }
   } catch (error) {
     core.warning(`failed to fetch ${owner}/${repo}/${path} at ${ref}; ${error}`)
+    if (error instanceof Error && error.name === 'HttpError') {
+      return
+    }
     throw error
   }
 }
