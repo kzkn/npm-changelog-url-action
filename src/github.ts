@@ -17,7 +17,9 @@ export async function baseRefOfPull(
     })
     return res.data.base.ref
   } catch (e) {
-    core.warning(`failed to get baseRefOfPull ${owner}/${repo} pull_number=${pullNumber}; ${e}`)
+    core.warning(
+      `failed to get baseRefOfPull ${owner}/${repo} pull_number=${pullNumber}; ${e}`
+    )
     throw e
   }
 }
@@ -152,7 +154,9 @@ export class Repository {
       })
       return res.data.tree as FileEntry[]
     } catch (e) {
-      core.warning(`failed to getTree ${this.owner}/${this.name}/${branch}; ${e}`)
+      core.warning(
+        `failed to getTree ${this.owner}/${this.name}/${branch}; ${e}`
+      )
       throw e
     }
   }
@@ -165,7 +169,9 @@ export class Repository {
       })
       return res.data.default_branch
     } catch (e) {
-      core.warning(`failed to get defaultBranch ${this.owner}/${this.name}; ${e}`)
+      core.warning(
+        `failed to get defaultBranch ${this.owner}/${this.name}; ${e}`
+      )
       throw e
     }
   }
@@ -223,7 +229,9 @@ class Tree {
       })
       return res.data.default_branch
     } catch (e) {
-      core.warning(`github tree: failed to get defaultBranch ${this.owner}/${this.repo}; ${e}`)
+      core.warning(
+        `github tree: failed to get defaultBranch ${this.owner}/${this.repo}; ${e}`
+      )
       throw e
     }
   }
