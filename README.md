@@ -9,7 +9,7 @@ The action works only with `pull_request` event.
 ### Inputs
 
 - `githubToken` - The GITHUB_TOKEN secret.
-- `npmToken` - A API token of npmjs.org. Required type is `Read-only`
+- `npmToken` - A API token of npmjs.org. Required type is `Read-only` (optional)
 - `lockPath` _ Lock file path. (default: `yarn.lock`)
 - `onlySpecifiedPackages` - Only to packages specified in `package.json`. (default: `false`)
 
@@ -29,7 +29,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: kzkn/npm-changelog-url-action@v1
+      - uses: kzkn/npm-changelog-url-action@v2
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           npmToken: ${{ secrets.NPM_TOKEN }}
