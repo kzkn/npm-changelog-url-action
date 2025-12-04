@@ -2,7 +2,7 @@ import {promises as fs} from 'fs'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {parseLockFile, type InstalledPackages} from './lockFile'
-import {resolvePackage} from './package'
+import {resolvePackage, Package} from './package'
 import {baseRefOfPull, fetchContent} from './github'
 import {Cache} from './cache'
 import replaceComment from '@aki77/actions-replace-comment'
@@ -65,16 +65,28 @@ function diff(
   return updatedPackages
 }
 
-async function fetchChangelogUrls(
+function isPresent<T>(value: T | null | undefined): value is T {
+  return value !== undefined && value !== null
+}
+
+async function fetchPackages(
   packages: readonly UpdatedPackage[],
-  npmToken: string,
+  npmToken: string
+): Promise<Package[]> {
+  const pkgs = await Promise.all(
+    packages.map(async pkg =>
+      resolvePackage(pkg.name, pkg.currentVersion, npmToken)
+    )
+  )
+  return pkgs.filter(isPresent)
+}
+
+async function fetchChangelogUrls(
+  packages: readonly Package[],
   githubToken: string
 ): Promise<Map<string, string>> {
-  const pkgs = await Promise.all(
-    packages.map(async pkg => resolvePackage(pkg.name, npmToken))
-  )
   const urls = await Promise.all(
-    pkgs.map(async pkg =>
+    packages.map(async pkg =>
       pkg
         ? cache().getChangelogUrlOrFind(pkg, githubToken)
         : Promise.resolve(undefined)
@@ -92,15 +104,22 @@ async function fetchChangelogUrls(
 }
 
 async function generateReport(
-  packages: readonly UpdatedPackage[],
+  packages: readonly Package[],
+  packageUpdates: readonly UpdatedPackage[],
   urls: Map<string, string>
 ): Promise<string> {
   const {markdownTable} = await import('markdown-table')
 
+  const licenses = new Map<string, string>()
+  for (const pkg of packages) {
+    licenses.set(pkg.name, pkg.license || '')
+  }
+
   return markdownTable([
-    ['Package', 'Before', 'After', 'ChangeLog URL'],
-    ...packages.map(({name, currentVersion, previousVersion}) => [
+    ['Package', 'License', 'Before', 'After', 'ChangeLog URL'],
+    ...packageUpdates.map(({name, currentVersion, previousVersion}) => [
       name,
+      licenses.get(name) || '',
       previousVersion || '-',
       currentVersion,
       urls.get(name) || `https://www.npmjs.com/package/${name}`
@@ -169,15 +188,12 @@ async function run(): Promise<void> {
         : updates
 
     const npmToken: string = core.getInput('npmToken')
-    const changelogs = await fetchChangelogUrls(
-      filteredUpdates,
-      npmToken,
-      githubToken
-    )
+    const packages = await fetchPackages(filteredUpdates, npmToken)
+    const changelogs = await fetchChangelogUrls(packages, githubToken)
 
     await cache().save()
 
-    const report = await generateReport(filteredUpdates, changelogs)
+    const report = await generateReport(packages, filteredUpdates, changelogs)
     await postComment(report)
   } catch (error) {
     const errorMessage = `Unexpected error has occurred: ${error}`

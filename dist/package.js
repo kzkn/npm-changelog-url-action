@@ -30,9 +30,11 @@ exports.Package = exports.resolvePackage = void 0;
 const core = __importStar(require("@actions/core"));
 const npm_registry_fetch_1 = __importDefault(require("npm-registry-fetch"));
 const github_1 = require("./github");
-async function resolvePackage(name, npmToken) {
+async function resolvePackage(name, version, npmToken) {
     try {
-        const npmInfo = await npm_registry_fetch_1.default.json(name, { token: npmToken });
+        const npmInfo = await npm_registry_fetch_1.default.json(`${name}/${version}`, {
+            token: npmToken
+        });
         return new Package(name, npmInfo);
     }
     catch (e) {
@@ -56,6 +58,9 @@ class Package {
         else {
             core.debug(`npm package: no repository name=${this.name} repo=${repository} url=${repository?.url}`);
         }
+    }
+    get license() {
+        return this.info.license || null;
     }
 }
 exports.Package = Package;
