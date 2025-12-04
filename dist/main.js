@@ -71,9 +71,15 @@ function diff(currPkgs, prevPkgs) {
     }
     return updatedPackages;
 }
-async function fetchChangelogUrls(packages, npmToken, githubToken) {
-    const pkgs = await Promise.all(packages.map(async (pkg) => (0, package_1.resolvePackage)(pkg.name, npmToken)));
-    const urls = await Promise.all(pkgs.map(async (pkg) => pkg
+function isPresent(value) {
+    return value !== undefined && value !== null;
+}
+async function fetchPackages(packages, npmToken) {
+    const pkgs = await Promise.all(packages.map(async (pkg) => (0, package_1.resolvePackage)(pkg.name, pkg.currentVersion, npmToken)));
+    return pkgs.filter(isPresent);
+}
+async function fetchChangelogUrls(packages, githubToken) {
+    const urls = await Promise.all(packages.map(async (pkg) => pkg
         ? cache().getChangelogUrlOrFind(pkg, githubToken)
         : Promise.resolve(undefined)));
     const ret = new Map();
@@ -86,12 +92,17 @@ async function fetchChangelogUrls(packages, npmToken, githubToken) {
     }
     return ret;
 }
-async function generateReport(packages, urls) {
+async function generateReport(packages, packageUpdates, urls) {
     const { markdownTable } = await import('markdown-table');
+    const licenses = new Map();
+    for (const pkg of packages) {
+        licenses.set(pkg.name, pkg.license || '');
+    }
     return markdownTable([
-        ['Package', 'Before', 'After', 'ChangeLog URL'],
-        ...packages.map(({ name, currentVersion, previousVersion }) => [
+        ['Package', 'License', 'Before', 'After', 'ChangeLog URL'],
+        ...packageUpdates.map(({ name, currentVersion, previousVersion }) => [
             name,
+            licenses.get(name) || '',
             previousVersion || '-',
             currentVersion,
             urls.get(name) || `https://www.npmjs.com/package/${name}`
@@ -139,9 +150,10 @@ async function run() {
             ? await filterSpecifiedPackages(updates)
             : updates;
         const npmToken = core.getInput('npmToken');
-        const changelogs = await fetchChangelogUrls(filteredUpdates, npmToken, githubToken);
+        const packages = await fetchPackages(filteredUpdates, npmToken);
+        const changelogs = await fetchChangelogUrls(packages, githubToken);
         await cache().save();
-        const report = await generateReport(filteredUpdates, changelogs);
+        const report = await generateReport(packages, filteredUpdates, changelogs);
         await postComment(report);
     }
     catch (error) {

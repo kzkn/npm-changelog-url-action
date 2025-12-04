@@ -4,10 +4,13 @@ import {newGithub} from './github'
 
 export async function resolvePackage(
   name: string,
+  version: string,
   npmToken: string
 ): Promise<Package | undefined> {
   try {
-    const npmInfo = await npmRegistryFetch.json(name, {token: npmToken})
+    const npmInfo = await npmRegistryFetch.json(`${name}/${version}`, {
+      token: npmToken
+    })
     return new Package(name, npmInfo)
   } catch (e) {
     core.debug(`failed to fetch npm package info: ${name}, ${e}`)
@@ -33,5 +36,9 @@ export class Package {
         `npm package: no repository name=${this.name} repo=${repository} url=${repository?.url}`
       )
     }
+  }
+
+  get license(): string | null {
+    return this.info.license || null
   }
 }
