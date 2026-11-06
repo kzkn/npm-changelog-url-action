@@ -99,3 +99,76 @@ snapshots:
   expect(pkgs.has('bootstrap')).toBeTruthy()
   expect(pkgs.has('@popperjs/core')).toBeTruthy()
 })
+
+test('pnpm@v12 lockfile parse', () => {
+  // pnpm v12 writes the package manager itself into a separate document at the top of pnpm-lock.yaml
+  const text = `---
+lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    configDependencies: {}
+    packageManagerDependencies:
+      pnpm:
+        specifier: 12.16.1
+        version: 12.16.1
+
+packages:
+
+  '@pnpm/exe.linux-x64@12.16.1':
+    resolution: {integrity: sha512-AAAA}
+    cpu: [x64]
+    os: [linux]
+
+  pnpm@12.16.1:
+    resolution: {integrity: sha512-BBBB}
+
+snapshots:
+
+  '@pnpm/exe.linux-x64@12.16.1':
+    optional: true
+
+  pnpm@12.16.1:
+    optionalDependencies:
+      '@pnpm/exe.linux-x64': 12.16.1
+
+---
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      bootstrap:
+        specifier: ^5.3.3
+        version: 5.3.3(@popperjs/core@2.11.8)
+
+packages:
+
+  '@popperjs/core@2.11.8':
+    resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
+
+  bootstrap@5.3.3:
+    resolution: {integrity: sha512-8HLCdWgyoMguSO9o+aH+iuZ+aht+mzW0u3HIMzVu7Srrpv7EBBxTnrFlSCskwdY1+EOFQSm7uMJhNQHkdPcmjg==}
+    peerDependencies:
+      '@popperjs/core': ^2.11.8
+
+snapshots:
+
+  '@popperjs/core@2.11.8': {}
+
+  bootstrap@5.3.3(@popperjs/core@2.11.8):
+    dependencies:
+      '@popperjs/core': 2.11.8
+`
+
+  const pkgs = parsePnpmLockFile(text)
+  expect(pkgs.size).toEqual(2)
+  expect(pkgs.has('bootstrap')).toBeTruthy()
+  expect(pkgs.has('@popperjs/core')).toBeTruthy()
+})

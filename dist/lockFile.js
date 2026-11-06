@@ -56,9 +56,13 @@ function parseYarnLockFile(text) {
 }
 exports.parseYarnLockFile = parseYarnLockFile;
 function parsePnpmLockFile(text) {
-    const lockfileFile = js_yaml_1.default.load(text);
+    // pnpm v12 writes the lockfile of the package manager itself as a separate
+    // document before the project's lockfile. Its packages (pnpm and @pnpm/exe.*)
+    // are not the project's dependencies, so only the last document is used.
+    const documents = js_yaml_1.default.loadAll(text);
+    const lockfileFile = documents[documents.length - 1];
     const pkgs = new Map();
-    if (!lockfileFile.packages)
+    if (!lockfileFile?.packages)
         return pkgs;
     const lockfileVersion = typeof lockfileFile.lockfileVersion === 'string'
         ? Number.parseFloat(lockfileFile.lockfileVersion)
