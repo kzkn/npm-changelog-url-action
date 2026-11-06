@@ -34,9 +34,13 @@ export function parseYarnLockFile(text: string): InstalledPackages {
 }
 
 export function parsePnpmLockFile(text: string): InstalledPackages {
-  const lockfileFile = yaml.load(text) as Lockfile
+  // pnpm v12 writes the lockfile of the package manager itself as a separate
+  // document before the project's lockfile. Its packages (pnpm and @pnpm/exe.*)
+  // are not the project's dependencies, so only the last document is used.
+  const documents = yaml.loadAll(text) as Lockfile[]
+  const lockfileFile = documents[documents.length - 1]
   const pkgs = new Map<string, InstalledPackage>()
-  if (!lockfileFile.packages) return pkgs
+  if (!lockfileFile?.packages) return pkgs
 
   const lockfileVersion =
     typeof lockfileFile.lockfileVersion === 'string'
